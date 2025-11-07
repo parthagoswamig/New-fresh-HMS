@@ -316,27 +316,15 @@ export class StaffService {
   }
 
   async getStats(tenantId: string) {
-    const [total, active, byRole, byDepartment] = await Promise.all([
+    const [total, active] = await Promise.all([
       this.prisma.staff.count({ where: { tenantId } }),
       this.prisma.staff.count({ where: { tenantId, isActive: true } }),
-      this.prisma.staff.groupBy({
-        by: ['user'],
-        where: { tenantId },
-        _count: true,
-      }),
-      this.prisma.staff.groupBy({
-        by: ['departmentId'],
-        where: { tenantId, departmentId: { not: null } },
-        _count: true,
-      }),
     ]);
 
     return {
       total,
       active,
       inactive: total - active,
-      byRole,
-      byDepartment,
     };
   }
 }
