@@ -30,6 +30,7 @@ import {
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: UserCog, label: 'Staff', href: '/dashboard/staff' },
+  { icon: Building2, label: 'Departments', href: '/dashboard/departments' },
   { icon: Users, label: 'Patients', href: '/dashboard/patients' },
   { icon: Calendar, label: 'Appointments', href: '/dashboard/appointments' },
   { icon: Stethoscope, label: 'OPD', href: '/dashboard/opd' },
@@ -42,7 +43,6 @@ const menuItems = [
   { icon: Receipt, label: 'Billing', href: '/dashboard/billing' },
   { icon: Shield, label: 'Insurance', href: '/dashboard/insurance' },
   { icon: DollarSign, label: 'Finance', href: '/dashboard/finance' },
-  { icon: Building2, label: 'Inventory', href: '/dashboard/inventory' },
   { icon: BarChart3, label: 'Reports', href: '/dashboard/reports' },
 ];
 
