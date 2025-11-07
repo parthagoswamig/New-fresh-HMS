@@ -97,12 +97,10 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
+    // Find user by email only (email should be unique across all tenants)
+    const user = await this.prisma.user.findFirst({
       where: {
-        tenantId_email: {
-          tenantId: dto.tenantId,
-          email: dto.email,
-        },
+        email: dto.email,
       },
       include: {
         tenant: true,
@@ -128,11 +126,19 @@ export class AuthService {
       data: { lastLogin: new Date() },
     });
 
+    // Generate tokens
     const token = this.generateToken(user);
+    const refreshToken = this.generateRefreshToken(user);
 
     return {
       user: this.sanitizeUser(user),
       token,
+      refreshToken,
+      tenant: {
+        id: user.tenant.id,
+        name: user.tenant.name,
+        subdomain: user.tenant.subdomain,
+      },
     };
   }
 

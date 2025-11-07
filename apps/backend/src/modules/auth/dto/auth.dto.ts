@@ -52,11 +52,6 @@ export class RegisterDto {
 
 export class LoginDto {
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  tenantId: string;
-
-  @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;

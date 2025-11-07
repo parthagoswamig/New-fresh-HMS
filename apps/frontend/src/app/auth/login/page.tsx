@@ -16,7 +16,6 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   
   const [formData, setFormData] = useState({
-    tenantId: '',
     email: '',
     password: '',
   });
@@ -60,7 +59,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-3xl">Welcome Back</CardTitle>
           <CardDescription>
-            Sign in to your CareStack account
+            Sign in to your account
           </CardDescription>
         </CardHeader>
         
@@ -72,19 +71,6 @@ export default function LoginPage() {
                 <span className="text-sm">{error}</span>
               </div>
             )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="tenantId">Tenant ID</Label>
-              <Input
-                id="tenantId"
-                name="tenantId"
-                placeholder="your-hospital-id"
-                value={formData.tenantId}
-                onChange={handleChange}
-                required
-              />
-              <p className="text-xs text-gray-500">Your hospital's unique identifier</p>
-            </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
