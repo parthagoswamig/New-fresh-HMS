@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Users } from 'lucide-react';
 
 export default function PatientsPage() {
   return (
-    <ModulePage title="Patients">
-      <p className="text-gray-600">
-        Manage patient records, medical history, and personal information.
-      </p>
-      {/* Add patient management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Users}
+      title="Patients"
+      description="Manage patient records, medical history, and demographics"
+    />
   );
 }

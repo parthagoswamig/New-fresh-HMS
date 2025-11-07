@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Calendar } from 'lucide-react';
 
 export default function AppointmentsPage() {
   return (
-    <ModulePage title="Appointments">
-      <p className="text-gray-600">
-        Schedule and manage patient appointments with doctors.
-      </p>
-      {/* Add appointments management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Calendar}
+      title="Appointments"
+      description="Schedule and manage patient appointments with doctors"
+    />
   );
 }

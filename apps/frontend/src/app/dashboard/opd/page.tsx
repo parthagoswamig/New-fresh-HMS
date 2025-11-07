@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Stethoscope } from 'lucide-react';
 
-export default function OPDPage() {
+export default function OpdPage() {
   return (
-    <ModulePage title="OPD (Outpatient Department)">
-      <p className="text-gray-600">
-        Manage outpatient visits, consultations, and records.
-      </p>
-      {/* Add OPD management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Stethoscope}
+      title="OPD"
+      description="Manage outpatient department and consultations"
+    />
   );
 }

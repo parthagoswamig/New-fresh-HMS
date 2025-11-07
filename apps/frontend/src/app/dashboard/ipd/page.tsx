@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Bed } from 'lucide-react';
 
-export default function IPDPage() {
+export default function IpdPage() {
   return (
-    <ModulePage title="IPD (Inpatient Department)">
-      <p className="text-gray-600">
-        Manage inpatient admissions, bed assignments, and ward management.
-      </p>
-      {/* Add IPD management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Bed}
+      title="IPD"
+      description="Manage inpatient department and bed allocation"
+    />
   );
 }

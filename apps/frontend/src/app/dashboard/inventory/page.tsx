@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Building2 } from 'lucide-react';
 
 export default function InventoryPage() {
   return (
-    <ModulePage title="Inventory">
-      <p className="text-gray-600">
-        Manage hospital inventory, medical supplies, and equipment.
-      </p>
-      {/* Add inventory management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Building2}
+      title="Inventory"
+      description="Manage hospital supplies, equipment, and stock levels"
+    />
   );
 }

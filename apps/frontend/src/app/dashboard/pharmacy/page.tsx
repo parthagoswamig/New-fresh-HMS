@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { Pill } from 'lucide-react';
 
 export default function PharmacyPage() {
   return (
-    <ModulePage title="Pharmacy">
-      <p className="text-gray-600">
-        Manage medicines, prescriptions, and pharmacy inventory.
-      </p>
-      {/* Add pharmacy management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={Pill}
+      title="Pharmacy"
+      description="Manage medicines, prescriptions, and inventory"
+    />
   );
 }
