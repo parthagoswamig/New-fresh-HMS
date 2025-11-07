@@ -97,49 +97,57 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    // Find user by email only (email should be unique across all tenants)
-    const user = await this.prisma.user.findFirst({
-      where: {
-        email: dto.email,
-      },
-      include: {
-        tenant: true,
-      },
-    });
+    try {
+      // Find user by email only (email should be unique across all tenants)
+      const user = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+        },
+        include: {
+          tenant: true,
+        },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (!user.isActive) {
+        throw new UnauthorizedException('Account is deactivated');
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLogin: new Date() },
+      });
+
+      // Generate tokens
+      const token = this.generateToken(user);
+      const refreshToken = this.generateRefreshToken(user);
+
+      return {
+        user: this.sanitizeUser(user),
+        token,
+        refreshToken,
+        tenant: {
+          id: user.tenant.id,
+          name: user.tenant.name,
+          subdomain: user.tenant.subdomain,
+        },
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new Error(`Login failed: ${error.message}`);
     }
-
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is deactivated');
-    }
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() },
-    });
-
-    // Generate tokens
-    const token = this.generateToken(user);
-    const refreshToken = this.generateRefreshToken(user);
-
-    return {
-      user: this.sanitizeUser(user),
-      token,
-      refreshToken,
-      tenant: {
-        id: user.tenant.id,
-        name: user.tenant.name,
-        subdomain: user.tenant.subdomain,
-      },
-    };
   }
 
   async validateUser(userId: string) {
