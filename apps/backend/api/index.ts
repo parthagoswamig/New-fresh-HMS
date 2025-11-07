@@ -15,16 +15,15 @@ async function bootstrap() {
       new ExpressAdapter(server),
     );
 
-    // Enable CORS
-    const corsOrigins = process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-      : ['*'];
-    
+    // Enable CORS - Allow all origins for now
     app.enableCors({
-      origin: corsOrigins,
+      origin: true, // Allow all origins
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Requested-With', 'Accept'],
+      exposedHeaders: ['Authorization'],
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
     });
 
     // Global validation pipe
