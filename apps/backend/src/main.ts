@@ -2,9 +2,22 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+// Create Express app for Vercel
+const expressApp = express();
+let cachedApp;
+
+async function createApp() {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressApp),
+  );
 
   // Enable CORS
   const corsOrigins = process.env.CORS_ORIGINS
@@ -29,34 +42,38 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('HMS SaaS API')
+    .setTitle('CareStack API')
     .setDescription('Hospital Management System SaaS API Documentation')
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('auth', 'Authentication endpoints')
     .addTag('tenants', 'Tenant management')
-    .addTag('users', 'User management')
-    .addTag('patients', 'Patient management')
-    .addTag('staff', 'Staff management')
-    .addTag('appointments', 'Appointment scheduling')
-    .addTag('opd', 'Outpatient department')
-    .addTag('ipd', 'Inpatient department')
-    .addTag('pharmacy', 'Pharmacy management')
-    .addTag('laboratory', 'Laboratory management')
-    .addTag('billing', 'Billing and finance')
-    .addTag('insurance', 'Insurance management')
-    .addTag('hr', 'HR and payroll')
-    .addTag('settings', 'System settings')
-    .addTag('reports', 'Reports and analytics')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
+  await app.init();
+  cachedApp = app;
+  return app;
+}
+
+// For local development
+async function bootstrap() {
+  const app = await createApp();
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`🚀 HMS SaaS API running on http://localhost:${port}`);
+  console.log(`🚀 CareStack API running on http://localhost:${port}`);
   console.log(`📚 API Documentation available at http://localhost:${port}/docs`);
 }
 
-bootstrap();
+// Export for Vercel serverless
+export default async (req, res) => {
+  await createApp();
+  return expressApp(req, res);
+};
+
+// Start server if not in Vercel
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  bootstrap();
+}
