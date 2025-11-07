@@ -7,13 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, AlertCircle } from 'lucide-react';
+import { Heart, AlertCircle, Check } from 'lucide-react';
 import apiClient from '@/lib/api-client';
-import { useAuthStore } from '@/store/auth-store';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
   
   const [formData, setFormData] = useState({
     // Hospital/Tenant Info
@@ -31,6 +29,7 @@ export default function RegisterPage() {
   });
   
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +55,7 @@ export default function RegisterPage() {
     
     try {
       // Register tenant and admin user
-      const response = await apiClient.post('/auth/register', {
+      await apiClient.post('/auth/register', {
         // Tenant data
         tenantName: formData.hospitalName,
         tenantEmail: formData.hospitalEmail,
@@ -71,13 +70,26 @@ export default function RegisterPage() {
         role: 'SUPER_ADMIN',
       });
       
-      const { user, token, refreshToken, tenant } = response.data;
+      // Show success message
+      setSuccess('Account created successfully! Redirecting to login...');
       
-      // Save to store
-      login(user, token, refreshToken, tenant);
+      // Clear form
+      setFormData({
+        hospitalName: '',
+        hospitalEmail: '',
+        hospitalPhone: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+      });
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
@@ -106,6 +118,13 @@ export default function RegisterPage() {
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
                 <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">{error}</span>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-start">
+                <Check className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <span className="text-sm">{success}</span>
               </div>
             )}
             
