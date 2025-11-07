@@ -3,25 +3,23 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 export class RegisterDto {
+  // Tenant Info
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  tenantId: string;
+  tenantName: string;
 
   @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  tenantEmail: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @MinLength(8)
-  password: string;
+  @IsOptional()
+  tenantPhone?: string;
 
-  @ApiProperty({ enum: Role })
-  @IsEnum(Role)
-  role: Role;
-
+  // User Info
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -32,10 +30,24 @@ export class RegisterDto {
   @IsNotEmpty()
   lastName: string;
 
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @ApiProperty({ enum: Role })
+  @IsEnum(Role)
+  role: Role;
 }
 
 export class LoginDto {

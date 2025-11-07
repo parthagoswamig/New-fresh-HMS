@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     // Hospital/Tenant Info
     hospitalName: '',
-    subdomain: '',
     hospitalEmail: '',
     hospitalPhone: '',
     
@@ -60,7 +59,6 @@ export default function RegisterPage() {
       const response = await apiClient.post('/auth/register', {
         // Tenant data
         tenantName: formData.hospitalName,
-        subdomain: formData.subdomain,
         tenantEmail: formData.hospitalEmail,
         tenantPhone: formData.hospitalPhone,
         
@@ -126,24 +124,6 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     required
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subdomain">Subdomain *</Label>
-                  <div className="flex items-center">
-                    <Input
-                      id="subdomain"
-                      name="subdomain"
-                      placeholder="cityhospital"
-                      value={formData.subdomain}
-                      onChange={handleChange}
-                      className="rounded-r-none"
-                      required
-                    />
-                    <span className="bg-gray-100 border border-l-0 border-gray-300 px-3 py-2 text-sm text-gray-600 rounded-r-md">
-                      .carestack.com
-                    </span>
-                  </div>
                 </div>
                 
                 <div className="space-y-2">
