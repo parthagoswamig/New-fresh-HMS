@@ -1,49 +1,64 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   email: string;
-  role: string;
-  tenantId: string;
   firstName: string;
   lastName: string;
+  role: string;
+  tenantId: string;
+  phone?: string;
+}
+
+export interface Tenant {
+  id: string;
+  name: string;
+  subdomain: string;
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
-  setAuth: (user: User, token: string) => void;
+  refreshToken: string | null;
+  tenant: Tenant | null;
+  isAuthenticated: boolean;
+  login: (user: User, token: string, refreshToken: string, tenant: Tenant) => void;
   logout: () => void;
-  isAuthenticated: () => boolean;
+  updateUser: (user: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
-      setAuth: (user, token) => {
-        set({ user, token });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-      },
-      logout: () => {
-        set({ user: null, token: null });
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      },
-      isAuthenticated: () => {
-        const state = get();
-        return !!state.token && !!state.user;
-      },
+      refreshToken: null,
+      tenant: null,
+      isAuthenticated: false,
+      login: (user, token, refreshToken, tenant) =>
+        set({
+          user,
+          token,
+          refreshToken,
+          tenant,
+          isAuthenticated: true,
+        }),
+      logout: () =>
+        set({
+          user: null,
+          token: null,
+          refreshToken: null,
+          tenant: null,
+          isAuthenticated: false,
+        }),
+      updateUser: (userData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : null,
+        })),
     }),
     {
-      name: 'auth-storage',
+      name: 'carestack-auth',
     }
   )
 );
