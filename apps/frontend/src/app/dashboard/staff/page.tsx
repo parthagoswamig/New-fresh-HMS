@@ -1,12 +1,12 @@
 import { ModulePage } from '@/components/layout/ModulePage';
+import { UserCog } from 'lucide-react';
 
 export default function StaffPage() {
   return (
-    <ModulePage title="Staff Management">
-      <p className="text-gray-600">
-        Manage hospital staff, doctors, nurses, and other personnel.
-      </p>
-      {/* Add staff management forms/tables here */}
-    </ModulePage>
+    <ModulePage
+      icon={UserCog}
+      title="Staff Management"
+      description="Manage doctors, nurses, and hospital staff"
+    />
   );
 }
