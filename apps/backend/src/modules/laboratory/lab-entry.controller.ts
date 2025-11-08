@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { LabEntryService } from './lab-entry.service';
@@ -30,14 +31,19 @@ export class LabEntryController {
   @ApiResponse({ status: 201, description: 'Lab entry created successfully' })
   create(
     @Headers('x-tenant-id') tenantId: string,
+    @Headers('x-user-id') userId: string,
     @Request() req: any,
     @Body() createLabEntryDto: CreateLabEntryDto,
   ) {
     if (!tenantId) {
       throw new Error('Tenant ID is required');
     }
-    const userId = req.user?.staffId || req.user?.sub;
-    return this.labEntryService.createEntry(tenantId, userId, createLabEntryDto);
+    // Try multiple sources for userId
+    const staffId = userId || req.user?.staffId || req.user?.sub || req.user?.id;
+    if (!staffId) {
+      throw new BadRequestException('User ID is required');
+    }
+    return this.labEntryService.createEntry(tenantId, staffId, createLabEntryDto);
   }
 
   @Get()

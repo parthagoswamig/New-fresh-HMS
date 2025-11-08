@@ -99,7 +99,7 @@ export default function NewLabEntryPage() {
         billNow: formData.billNow,
       };
 
-      await labEntryService.createEntry(payload, tenant?.id || '');
+      await labEntryService.createEntry(payload, tenant?.id || '', user?.id || '');
       router.push('/dashboard/lab-entries');
     } catch (error: any) {
       console.error('Failed to create lab entry:', error);

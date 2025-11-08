@@ -2,9 +2,12 @@ import apiClient from '@/lib/api-client';
 
 export const labEntryService = {
   // Lab Entry Management (Patient Orders)
-  createEntry: (data: any, tenantId: string) =>
+  createEntry: (data: any, tenantId: string, userId: string) =>
     apiClient.post('/lab-entries', data, {
-      headers: { 'x-tenant-id': tenantId },
+      headers: { 
+        'x-tenant-id': tenantId,
+        'x-user-id': userId,
+      },
     }),
 
   listEntries: (params: any, tenantId: string) =>
