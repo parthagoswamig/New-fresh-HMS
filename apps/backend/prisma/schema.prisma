@@ -223,8 +223,9 @@ model Department {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   staff       Staff[]
+  opdVisits   OPDVisit[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -262,17 +263,22 @@ model OPDVisit {
   tenantId        String
   patientId       String
   doctorId        String
+  departmentId    String?
   visitDate       DateTime @default(now())
   chiefComplaint  String
   diagnosis       String?
+  prescription    String?
   notes           String?
   vitals          Json?
+  fee             Float    @default(0)
+  status          String   @default("PENDING")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   patient         Patient        @relation(fields: [patientId], references: [id])
   doctor          Staff          @relation(fields: [doctorId], references: [id])
+  department      Department?    @relation(fields: [departmentId], references: [id])
   prescriptions   Prescription[]
   labOrders       LabOrder[]
 
