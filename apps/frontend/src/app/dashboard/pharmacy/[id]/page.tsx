@@ -133,7 +133,7 @@ export default function MedicineDetailPage() {
               <span className="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
                 Expired
               </span>
-            ) : isLowStock(medicine.quantity, medicine.reorderLevel) ? (
+            ) : isLowStock(medicine.stockQuantity, medicine.reorderLevel) ? (
               <span className="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
                 Low Stock
               </span>
@@ -206,22 +206,18 @@ export default function MedicineDetailPage() {
               <p className="text-sm text-gray-600">Current Stock</p>
               <p
                 className={`text-base font-medium ${
-                  isLowStock(medicine.quantity, medicine.reorderLevel)
+                  isLowStock(medicine.stockQuantity, medicine.reorderLevel)
                     ? 'text-red-600'
                     : 'text-gray-900'
                 }`}
               >
-                {medicine.quantity} {medicine.unit}
+                {medicine.stockQuantity}
               </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Unit</p>
-              <p className="text-base font-medium text-gray-900">{medicine.unit}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Reorder Level</p>
               <p className="text-base font-medium text-gray-900">
-                {medicine.reorderLevel} {medicine.unit}
+                {medicine.reorderLevel}
               </p>
             </div>
             <div>
@@ -241,15 +237,15 @@ export default function MedicineDetailPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm text-gray-600">Price Per Unit</p>
+              <p className="text-sm text-gray-600">Unit Price</p>
               <p className="text-2xl font-bold text-gray-900">
-                ${medicine.pricePerUnit.toFixed(2)}
+                ${medicine.unitPrice.toFixed(2)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Stock Value</p>
               <p className="text-xl font-semibold text-gray-900">
-                ${(medicine.pricePerUnit * medicine.quantity).toFixed(2)}
+                ${(medicine.unitPrice * medicine.stockQuantity).toFixed(2)}
               </p>
             </div>
           </CardContent>
@@ -285,7 +281,7 @@ export default function MedicineDetailPage() {
                 </div>
               </div>
             )}
-            {isLowStock(medicine.quantity, medicine.reorderLevel) && !isExpired(medicine.expiryDate) && (
+            {isLowStock(medicine.stockQuantity, medicine.reorderLevel) && !isExpired(medicine.expiryDate) && (
               <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div>

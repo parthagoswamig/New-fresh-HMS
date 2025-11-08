@@ -273,23 +273,23 @@ export default function PharmacyPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div
                             className={`text-sm font-medium ${
-                              isLowStock(medicine.quantity, medicine.reorderLevel)
+                              isLowStock(medicine.stockQuantity, medicine.reorderLevel)
                                 ? 'text-red-600'
                                 : 'text-gray-900'
                             }`}
                           >
-                            {medicine.quantity} {medicine.unit}
+                            {medicine.stockQuantity}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${medicine.pricePerUnit.toFixed(2)}
+                          ${medicine.unitPrice.toFixed(2)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {isExpired(medicine.expiryDate) ? (
                             <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                               Expired
                             </span>
-                          ) : isLowStock(medicine.quantity, medicine.reorderLevel) ? (
+                          ) : isLowStock(medicine.stockQuantity, medicine.reorderLevel) ? (
                             <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                               Low Stock
                             </span>
@@ -369,17 +369,17 @@ export default function PharmacyPage() {
                           <span className="text-gray-600">Stock:</span>
                           <span
                             className={
-                              isLowStock(medicine.quantity, medicine.reorderLevel)
+                              isLowStock(medicine.stockQuantity, medicine.reorderLevel)
                                 ? 'text-red-600 font-medium'
                                 : 'text-gray-900'
                             }
                           >
-                            {medicine.quantity} {medicine.unit}
+                            {medicine.stockQuantity}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Price:</span>
-                          <span className="text-gray-900">${medicine.pricePerUnit.toFixed(2)}</span>
+                          <span className="text-gray-900">${medicine.unitPrice.toFixed(2)}</span>
                         </div>
                       </div>
                       <div className="flex gap-2">

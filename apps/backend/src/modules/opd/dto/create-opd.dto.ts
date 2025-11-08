@@ -1,17 +1,17 @@
-import { IsString, IsOptional, IsDateString, IsNumber, IsUUID, Min } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOpdDto {
   @ApiProperty({ description: 'Patient ID' })
-  @IsUUID()
+  @IsString()
   patientId: string;
 
   @ApiProperty({ description: 'Doctor ID' })
-  @IsUUID()
+  @IsString()
   doctorId: string;
 
   @ApiPropertyOptional({ description: 'Department ID' })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   departmentId?: string;
 

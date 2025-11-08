@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsNumber, IsArray, IsUUID, Min } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsNumber, IsArray, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -20,7 +20,7 @@ export class BillItemDto {
 
 export class CreateBillingDto {
   @ApiProperty({ description: 'Patient ID' })
-  @IsUUID()
+  @IsString()
   patientId: string;
 
   @ApiPropertyOptional({ description: 'Due date' })

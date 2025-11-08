@@ -1,17 +1,17 @@
-import { IsString, IsOptional, IsUUID, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateLabTestDto {
   @ApiProperty({ description: 'Patient ID' })
-  @IsUUID()
+  @IsString()
   patientId: string;
 
   @ApiProperty({ description: 'Lab test ID from catalog' })
-  @IsUUID()
+  @IsString()
   labTestId: string;
 
   @ApiProperty({ description: 'Ordered by staff ID' })
-  @IsUUID()
+  @IsString()
   orderedById: string;
 
   @ApiProperty({ description: 'Test name' })
@@ -54,12 +54,12 @@ export class CreateLabTestDto {
   notes?: string;
 
   @ApiPropertyOptional({ description: 'OPD Visit ID' })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   opdVisitId?: string;
 
   @ApiPropertyOptional({ description: 'IPD Admission ID' })
-  @IsUUID()
+  @IsString()
   @IsOptional()
   ipdAdmissionId?: string;
 }

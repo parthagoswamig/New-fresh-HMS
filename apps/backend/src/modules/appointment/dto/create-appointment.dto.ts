@@ -1,13 +1,13 @@
-import { IsString, IsOptional, IsDateString, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAppointmentDto {
   @ApiProperty({ description: 'Patient ID' })
-  @IsUUID()
+  @IsString()
   patientId: string;
 
   @ApiProperty({ description: 'Doctor ID' })
-  @IsUUID()
+  @IsString()
   doctorId: string;
 
   @ApiProperty({ description: 'Appointment date' })

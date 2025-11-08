@@ -18,13 +18,10 @@ export default function NewMedicinePage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    brand: '',
     batchNumber: '',
     expiryDate: '',
-    quantity: '',
-    unit: 'tablets',
-    pricePerUnit: '',
-    description: '',
+    stockQuantity: '',
+    unitPrice: '',
     genericName: '',
     manufacturer: '',
     category: '',
@@ -38,13 +35,10 @@ export default function NewMedicinePage() {
     try {
       const payload = {
         name: formData.name,
-        brand: formData.brand || undefined,
         batchNumber: formData.batchNumber || undefined,
         expiryDate: formData.expiryDate || undefined,
-        quantity: parseInt(formData.quantity),
-        unit: formData.unit,
-        pricePerUnit: parseFloat(formData.pricePerUnit),
-        description: formData.description || undefined,
+        stockQuantity: parseInt(formData.stockQuantity),
+        unitPrice: parseFloat(formData.unitPrice),
         genericName: formData.genericName || undefined,
         manufacturer: formData.manufacturer || undefined,
         category: formData.category || undefined,
@@ -98,18 +92,6 @@ export default function NewMedicinePage() {
                   onChange={handleChange}
                   placeholder="e.g., Paracetamol"
                   required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="brand">Brand</Label>
-                <Input
-                  type="text"
-                  id="brand"
-                  name="brand"
-                  value={formData.brand}
-                  onChange={handleChange}
-                  placeholder="e.g., Crocin"
                 />
               </div>
 
@@ -173,12 +155,12 @@ export default function NewMedicinePage() {
               </div>
 
               <div>
-                <Label htmlFor="quantity">Quantity *</Label>
+                <Label htmlFor="stockQuantity">Stock Quantity *</Label>
                 <Input
                   type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={formData.quantity}
+                  id="stockQuantity"
+                  name="stockQuantity"
+                  value={formData.stockQuantity}
                   onChange={handleChange}
                   placeholder="e.g., 100"
                   min="0"
@@ -187,34 +169,12 @@ export default function NewMedicinePage() {
               </div>
 
               <div>
-                <Label htmlFor="unit">Unit *</Label>
-                <select
-                  id="unit"
-                  name="unit"
-                  value={formData.unit}
-                  onChange={handleChange}
-                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="tablets">Tablets</option>
-                  <option value="capsules">Capsules</option>
-                  <option value="ml">ML</option>
-                  <option value="mg">MG</option>
-                  <option value="bottles">Bottles</option>
-                  <option value="boxes">Boxes</option>
-                  <option value="strips">Strips</option>
-                  <option value="vials">Vials</option>
-                  <option value="syringes">Syringes</option>
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="pricePerUnit">Price Per Unit *</Label>
+                <Label htmlFor="unitPrice">Unit Price *</Label>
                 <Input
                   type="number"
-                  id="pricePerUnit"
-                  name="pricePerUnit"
-                  value={formData.pricePerUnit}
+                  id="unitPrice"
+                  name="unitPrice"
+                  value={formData.unitPrice}
                   onChange={handleChange}
                   placeholder="e.g., 5.50"
                   step="0.01"
@@ -237,17 +197,6 @@ export default function NewMedicinePage() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Enter medicine description, usage instructions, side effects, etc..."
-                rows={4}
-              />
-            </div>
           </CardContent>
         </Card>
 
