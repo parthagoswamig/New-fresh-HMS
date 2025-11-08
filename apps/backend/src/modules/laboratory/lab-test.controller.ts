@@ -14,7 +14,9 @@ import {
   ParseBoolPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { LabTestService, CreateLabTestMasterDto, UpdateLabTestMasterDto } from './lab-test.service';
+import { LabTestService } from './lab-test.service';
+import { CreateLabTestMasterDto } from './dto/create-lab-test-master.dto';
+import { UpdateLabTestMasterDto } from './dto/update-lab-test-master.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('lab-tests')

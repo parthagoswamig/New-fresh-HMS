@@ -1,24 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-
-export class CreateLabTestMasterDto {
-  name: string;
-  category?: string;
-  price: number;
-  description?: string;
-  unit?: string;
-  referenceRange?: string;
-}
-
-export class UpdateLabTestMasterDto {
-  name?: string;
-  category?: string;
-  price?: number;
-  description?: string;
-  unit?: string;
-  referenceRange?: string;
-  isActive?: boolean;
-}
+import { CreateLabTestMasterDto } from './dto/create-lab-test-master.dto';
+import { UpdateLabTestMasterDto } from './dto/update-lab-test-master.dto';
 
 @Injectable()
 export class LabTestService {
