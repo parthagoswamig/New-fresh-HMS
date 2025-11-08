@@ -6,11 +6,6 @@ export class CreatePharmacyDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ description: 'Brand name' })
-  @IsString()
-  @IsOptional()
-  brand?: string;
-
   @ApiPropertyOptional({ description: 'Batch number' })
   @IsString()
   @IsOptional()
@@ -21,19 +16,15 @@ export class CreatePharmacyDto {
   @IsOptional()
   expiryDate?: string;
 
-  @ApiProperty({ description: 'Quantity in stock' })
+  @ApiProperty({ description: 'Stock quantity' })
   @IsNumber()
   @Min(0)
-  quantity: number;
+  stockQuantity: number;
 
-  @ApiProperty({ description: 'Unit of measurement', example: 'tablets' })
-  @IsString()
-  unit: string;
-
-  @ApiProperty({ description: 'Price per unit' })
+  @ApiProperty({ description: 'Unit price' })
   @IsNumber()
   @Min(0)
-  pricePerUnit: number;
+  unitPrice: number;
 
   @ApiPropertyOptional({ description: 'Medicine description' })
   @IsString()

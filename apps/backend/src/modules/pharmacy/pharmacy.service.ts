@@ -25,13 +25,10 @@ export class PharmacyService {
       data: {
         tenantId,
         name: dto.name,
-        brand: dto.brand,
         batchNumber: dto.batchNumber,
         expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null,
-        quantity: dto.quantity,
-        unit: dto.unit,
-        pricePerUnit: dto.pricePerUnit,
-        description: dto.description,
+        stockQuantity: dto.stockQuantity,
+        unitPrice: dto.unitPrice,
         genericName: dto.genericName,
         manufacturer: dto.manufacturer,
         category: dto.category,
@@ -69,7 +66,7 @@ export class PharmacyService {
     }
 
     if (lowStock) {
-      where.quantity = { lte: this.prisma.medicine.fields.reorderLevel };
+      where.stockQuantity = { lte: this.prisma.medicine.fields.reorderLevel };
     }
 
     const [medicines, total] = await Promise.all([
@@ -132,14 +129,11 @@ export class PharmacyService {
     const updateData: any = {};
 
     if (dto.name) updateData.name = dto.name;
-    if (dto.brand !== undefined) updateData.brand = dto.brand;
     if (dto.batchNumber !== undefined) updateData.batchNumber = dto.batchNumber;
     if (dto.expiryDate !== undefined)
       updateData.expiryDate = dto.expiryDate ? new Date(dto.expiryDate) : null;
-    if (dto.quantity !== undefined) updateData.quantity = dto.quantity;
-    if (dto.unit) updateData.unit = dto.unit;
-    if (dto.pricePerUnit !== undefined) updateData.pricePerUnit = dto.pricePerUnit;
-    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.stockQuantity !== undefined) updateData.stockQuantity = dto.stockQuantity;
+    if (dto.unitPrice !== undefined) updateData.unitPrice = dto.unitPrice;
     if (dto.genericName !== undefined) updateData.genericName = dto.genericName;
     if (dto.manufacturer !== undefined) updateData.manufacturer = dto.manufacturer;
     if (dto.category !== undefined) updateData.category = dto.category;
@@ -170,7 +164,7 @@ export class PharmacyService {
         where: {
           tenantId,
           isActive: true,
-          quantity: { lte: 10 },
+          stockQuantity: { lte: 10 },
         },
       }),
       this.prisma.medicine.count({

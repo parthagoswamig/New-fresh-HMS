@@ -406,17 +406,14 @@ model Medicine {
   id                String             @id @default(cuid())
   tenantId          String
   name              String
-  brand             String?
   genericName       String?
   manufacturer      String?
   category          String?
   batchNumber       String?
   expiryDate        DateTime?
-  quantity          Int
-  unit              String
-  pricePerUnit      Float
+  stockQuantity     Int                @map("stockQuantity")
+  unitPrice         Float              @map("unitPrice")
   reorderLevel      Int                @default(10)
-  description       String?
   isActive          Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
