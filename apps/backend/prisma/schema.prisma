@@ -116,6 +116,7 @@ model Tenant {
   ipdAdmissions IPDAdmission[]
   prescriptions Prescription[]
   labOrders     LabOrder[]
+  labEntries    LabEntry[]
 
   @@map("tenants")
 }
@@ -173,6 +174,8 @@ model Staff {
   prescriptions   Prescription[]
   labOrders       LabOrder[]
   attendances     Attendance[]
+  labEntriesCreated LabEntry[] @relation("LabEntryCreatedBy")
+  labReports      LabReport[]  @relation("LabReportReportedBy")
 
   @@unique([tenantId, employeeId])
   @@index([tenantId])
@@ -211,6 +214,7 @@ model Patient {
   bills             Bill[]
   insurances        Insurance[]
   labOrders         LabOrder[]
+  labEntries        LabEntry[]
 
   @@unique([tenantId, patientId])
   @@index([tenantId])
@@ -498,7 +502,7 @@ model LabEntry {
 
   tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   patient         Patient     @relation(fields: [patientId], references: [id])
-  createdBy       Staff       @relation(fields: [createdById], references: [id])
+  createdBy       Staff       @relation("LabEntryCreatedBy", fields: [createdById], references: [id])
   bill            Bill?       @relation(fields: [billId], references: [id])
   items           LabEntryItem[]
   report          LabReport?
@@ -542,7 +546,7 @@ model LabReport {
   updatedAt       DateTime  @updatedAt
 
   labEntry        LabEntry  @relation(fields: [labEntryId], references: [id], onDelete: Cascade)
-  reportedBy      Staff     @relation(fields: [reportedById], references: [id])
+  reportedBy      Staff     @relation("LabReportReportedBy", fields: [reportedById], references: [id])
 
   @@map("lab_reports")
 }
