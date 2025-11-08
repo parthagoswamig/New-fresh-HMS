@@ -99,7 +99,13 @@ export default function NewLabEntryPage() {
         billNow: formData.billNow,
       };
 
-      await labEntryService.createEntry(payload, tenant?.id || '', user?.id || '');
+      const staffId = user?.staff?.id || user?.id || '';
+      if (!staffId) {
+        alert('Staff ID not found. Please contact administrator.');
+        return;
+      }
+      
+      await labEntryService.createEntry(payload, tenant?.id || '', staffId);
       router.push('/dashboard/lab-entries');
     } catch (error: any) {
       console.error('Failed to create lab entry:', error);

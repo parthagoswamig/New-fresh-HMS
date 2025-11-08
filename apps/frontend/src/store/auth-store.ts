@@ -9,6 +9,9 @@ export interface User {
   role: string;
   tenantId: string;
   phone?: string;
+  staff?: {
+    id: string;
+  };
 }
 
 export interface Tenant {

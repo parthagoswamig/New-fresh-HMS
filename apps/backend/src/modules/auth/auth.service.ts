@@ -105,6 +105,7 @@ export class AuthService {
         },
         include: {
           tenant: true,
+          staff: true,
         },
       });
 
@@ -171,6 +172,7 @@ export class AuthService {
       email: user.email,
       tenantId: user.tenantId,
       role: user.role,
+      staffId: user.staff?.id || null,
     };
 
     return this.jwtService.sign(payload);
