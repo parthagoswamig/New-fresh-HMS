@@ -77,12 +77,7 @@ enum PrescriptionStatus {
   CANCELLED
 }
 
-enum ClaimStatus {
-  SUBMITTED
-  APPROVED
-  REJECTED
-  PROCESSING
-}
+// Old ClaimStatus enum removed - now using the new one below for InsuranceClaim model
 
 // ==================== TENANT ====================
 model Tenant {
@@ -119,6 +114,10 @@ model Tenant {
   labEntries    LabEntry[]
   radiologyTests RadiologyTest[]
   patientRadiology PatientRadiology[]
+  insuranceCompanies InsuranceCompany[]
+  insurancePolicies InsurancePolicy[]
+  patientInsurances PatientInsurance[]
+  insuranceClaims InsuranceClaim[]
 
   @@map("tenants")
 }
@@ -179,6 +178,7 @@ model Staff {
   labEntriesCreated LabEntry[] @relation("LabEntryCreatedBy")
   labReports      LabReport[]  @relation("LabReportReportedBy")
   radiologyCreated PatientRadiology[] @relation("RadiologyCreatedBy")
+  claimsCreated   InsuranceClaim[] @relation("ClaimCreatedBy")
 
   @@unique([tenantId, employeeId])
   @@index([tenantId])
@@ -219,6 +219,8 @@ model Patient {
   labOrders         LabOrder[]
   labEntries        LabEntry[]
   radiologyTests    PatientRadiology[]
+  patientInsurances PatientInsurance[]
+  insuranceClaims   InsuranceClaim[]
 
   @@unique([tenantId, patientId])
   @@index([tenantId])
@@ -578,6 +580,7 @@ model Bill {
   items             BillItem[]
   payments          Payment[]
   labEntries        LabEntry[]
+  insuranceClaims   InsuranceClaim[]
 
   @@unique([tenantId, billNumber])
   @@index([tenantId])
@@ -647,7 +650,7 @@ model Claim {
   claimDate       DateTime    @default(now())
   claimAmount     Float
   approvedAmount  Float?
-  status          ClaimStatus @default(SUBMITTED)
+  status          String      @default("SUBMITTED")
   notes           String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -739,4 +742,129 @@ model PatientRadiology {
   @@index([tenantId])
   @@index([patientId])
   @@map("patient_radiology")
+}
+
+// ==================== INSURANCE ====================
+model InsuranceCompany {
+  id              String              @id @default(cuid())
+  tenantId        String
+  name            String
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  phone           String?
+  email           String?
+  contactPerson   String?
+  website         String?
+  terms           String?
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  policies        InsurancePolicy[]
+
+  @@index([tenantId])
+  @@map("insurance_companies")
+}
+
+model InsurancePolicy {
+  id              String              @id @default(cuid())
+  tenantId        String
+  companyId       String
+  policyName      String
+  policyNumber    String
+  policyType      String              // Health, Life, Accident, etc.
+  coveragePercent Float               // e.g., 80 means 80% coverage
+  deductible      Float               @default(0)
+  maxCoverage     Float?              // Maximum coverage amount
+  validFrom       DateTime
+  validUntil      DateTime
+  terms           String?
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  company         InsuranceCompany    @relation(fields: [companyId], references: [id])
+  patientInsurances PatientInsurance[]
+  claims          InsuranceClaim[]
+
+  @@unique([tenantId, policyNumber])
+  @@index([tenantId])
+  @@index([companyId])
+  @@map("insurance_policies")
+}
+
+model PatientInsurance {
+  id              String              @id @default(cuid())
+  tenantId        String
+  patientId       String
+  policyId        String
+  policyNumber    String
+  startDate       DateTime
+  endDate         DateTime
+  coverageAmount  Float?
+  remainingCoverage Float?
+  status          String              @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient             @relation(fields: [patientId], references: [id])
+  policy          InsurancePolicy     @relation(fields: [policyId], references: [id])
+
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([policyId])
+  @@map("patient_insurance")
+}
+
+enum ClaimStatus {
+  INITIATED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SETTLED
+  CANCELLED
+}
+
+model InsuranceClaim {
+  id              String              @id @default(cuid())
+  tenantId        String
+  patientId       String
+  policyId        String
+  claimNumber     String
+  billId          String?
+  claimDate       DateTime            @default(now())
+  serviceDate     DateTime
+  services        Json                // Array of services with costs
+  totalAmount     Float
+  deductible      Float
+  coveredAmount   Float
+  patientBalance  Float
+  status          ClaimStatus         @default(INITIATED)
+  reviewNotes     String?
+  approvedBy      String?
+  approvedDate    DateTime?
+  rejectionReason String?
+  documents       Json?               // Array of document URLs
+  createdById     String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient             @relation(fields: [patientId], references: [id])
+  policy          InsurancePolicy     @relation(fields: [policyId], references: [id])
+  createdBy       Staff               @relation("ClaimCreatedBy", fields: [createdById], references: [id])
+  bill            Bill?               @relation(fields: [billId], references: [id])
+
+  @@unique([tenantId, claimNumber])
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([policyId])
+  @@index([status])
+  @@map("insurance_claims")
 }
