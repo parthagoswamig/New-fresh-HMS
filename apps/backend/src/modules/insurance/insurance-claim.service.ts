@@ -77,7 +77,7 @@ export class InsuranceClaimService {
         claimNumber,
         billId: dto.billId,
         serviceDate: new Date(dto.serviceDate),
-        services: dto.services,
+        services: dto.services as any,
         totalAmount,
         deductible,
         coveredAmount,
@@ -329,7 +329,7 @@ export class InsuranceClaimService {
     return this.prisma.insuranceClaim.update({
       where: { id },
       data: {
-        documents: updatedDocs,
+        documents: updatedDocs as any,
       },
     });
   }
