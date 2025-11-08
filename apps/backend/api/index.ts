@@ -15,12 +15,16 @@ async function bootstrap() {
       new ExpressAdapter(server),
     );
 
-    // Enable CORS - Allow all origins for now
+    // Enable CORS
+    const corsOrigins = process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+      : ['http://localhost:3000'];
+    
     app.enableCors({
-      origin: true, // Allow all origins
+      origin: corsOrigins.length > 0 ? corsOrigins : true,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Requested-With', 'Accept'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-ID', 'X-Requested-With', 'Accept'],
       exposedHeaders: ['Authorization'],
       preflightContinue: false,
       optionsSuccessStatus: 204,

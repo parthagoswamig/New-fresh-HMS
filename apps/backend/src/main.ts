@@ -12,10 +12,11 @@ async function bootstrap() {
     : ['http://localhost:3000'];
   
   app.enableCors({
-    origin: corsOrigins,
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-ID', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['Authorization'],
   });
 
   // Global validation pipe
