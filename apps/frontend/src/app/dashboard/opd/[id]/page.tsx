@@ -222,13 +222,6 @@ export default function OPDDetailPage() {
               </div>
             )}
 
-            {visit.prescription && (
-              <div>
-                <p className="text-sm text-gray-600 font-semibold mb-1">Prescription</p>
-                <p className="text-gray-900 whitespace-pre-wrap">{visit.prescription}</p>
-              </div>
-            )}
-
             {visit.notes && (
               <div>
                 <p className="text-sm text-gray-600 font-semibold mb-1">Additional Notes</p>

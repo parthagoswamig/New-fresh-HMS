@@ -28,11 +28,6 @@ export class CreateOpdDto {
   @IsOptional()
   diagnosis?: string;
 
-  @ApiPropertyOptional({ description: 'Prescription details' })
-  @IsString()
-  @IsOptional()
-  prescription?: string;
-
   @ApiPropertyOptional({ description: 'Additional notes' })
   @IsString()
   @IsOptional()

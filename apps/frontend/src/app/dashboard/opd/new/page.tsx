@@ -27,7 +27,6 @@ export default function NewOPDVisitPage() {
     visitDate: new Date().toISOString().slice(0, 16),
     chiefComplaint: '',
     diagnosis: '',
-    prescription: '',
     notes: '',
     fee: '',
     status: 'PENDING',
@@ -249,18 +248,6 @@ export default function NewOPDVisitPage() {
                 onChange={handleChange}
                 placeholder="Enter diagnosis details..."
                 rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="prescription">Prescription</Label>
-              <Textarea
-                id="prescription"
-                name="prescription"
-                value={formData.prescription}
-                onChange={handleChange}
-                placeholder="Enter prescription details..."
-                rows={4}
               />
             </div>
 

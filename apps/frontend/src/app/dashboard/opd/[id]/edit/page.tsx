@@ -29,7 +29,6 @@ export default function EditOPDVisitPage() {
     visitDate: '',
     chiefComplaint: '',
     diagnosis: '',
-    prescription: '',
     notes: '',
     fee: '',
     status: 'PENDING',
@@ -54,7 +53,6 @@ export default function EditOPDVisitPage() {
         visitDate: new Date(visit.visitDate).toISOString().slice(0, 16),
         chiefComplaint: visit.chiefComplaint,
         diagnosis: visit.diagnosis || '',
-        prescription: visit.prescription || '',
         notes: visit.notes || '',
         fee: visit.fee.toString(),
         status: visit.status,
@@ -283,17 +281,6 @@ export default function EditOPDVisitPage() {
                 value={formData.diagnosis}
                 onChange={handleChange}
                 rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="prescription">Prescription</Label>
-              <Textarea
-                id="prescription"
-                name="prescription"
-                value={formData.prescription}
-                onChange={handleChange}
-                rows={4}
               />
             </div>
 

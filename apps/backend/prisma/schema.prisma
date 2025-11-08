@@ -271,7 +271,6 @@ model OPDVisit {
   visitDate       DateTime @default(now())
   chiefComplaint  String
   diagnosis       String?
-  prescription    String?
   notes           String?
   vitals          Json?
   fee             Float    @default(0)

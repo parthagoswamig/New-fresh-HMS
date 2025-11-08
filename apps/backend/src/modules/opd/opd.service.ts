@@ -17,7 +17,6 @@ export class OpdService {
         visitDate: new Date(dto.visitDate),
         chiefComplaint: dto.chiefComplaint,
         diagnosis: dto.diagnosis,
-        prescription: dto.prescription,
         notes: dto.notes,
         fee: dto.fee,
         status: dto.status || 'PENDING',
@@ -216,7 +215,6 @@ export class OpdService {
     if (dto.visitDate) updateData.visitDate = new Date(dto.visitDate);
     if (dto.chiefComplaint) updateData.chiefComplaint = dto.chiefComplaint;
     if (dto.diagnosis !== undefined) updateData.diagnosis = dto.diagnosis;
-    if (dto.prescription !== undefined) updateData.prescription = dto.prescription;
     if (dto.notes !== undefined) updateData.notes = dto.notes;
     if (dto.fee !== undefined) updateData.fee = dto.fee;
     if (dto.status) updateData.status = dto.status;
