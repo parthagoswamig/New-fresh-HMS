@@ -40,9 +40,14 @@ export default function LabEntriesPage() {
         params.status = statusFilter.toUpperCase();
       }
       const response = await labEntryService.listEntries(params, tenant?.id || '');
-      setEntries(response.data);
+      // Handle both array and object response formats
+      const entriesData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.data || response.data?.entries || []);
+      setEntries(entriesData);
     } catch (error) {
       console.error('Failed to fetch entries:', error);
+      setEntries([]);
     } finally {
       setLoading(false);
     }
