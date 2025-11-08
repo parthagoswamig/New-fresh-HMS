@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { labEntryService } from '@/services/lab-entry.service';
 import { labTestService } from '@/services/lab-test.service';
+import { labEntryService } from '@/services/lab-entry.service';
+import { patientService } from '@/services/patients.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
 
@@ -36,16 +37,13 @@ export default function NewLabEntryPage() {
 
   const fetchPatients = async () => {
     try {
-      // Fetch patients from API
-      const response = await fetch(`/api/patients?tenantId=${tenant?.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
-      setPatients(data.data || []);
+      const response = await patientService.list({ limit: 100 }, tenant?.id || '');
+      // Handle both array and object response formats
+      const patientData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setPatients(patientData);
     } catch (error) {
       console.error('Failed to fetch patients:', error);
+      setPatients([]);
     }
   };
 
@@ -55,9 +53,12 @@ export default function NewLabEntryPage() {
         isActive: true,
         limit: 100,
       }, tenant?.id || '');
-      setAvailableTests(response.data || []);
+      // Handle both array and object response formats
+      const testData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setAvailableTests(testData);
     } catch (error) {
       console.error('Failed to fetch tests:', error);
+      setAvailableTests([]);
     }
   };
 
