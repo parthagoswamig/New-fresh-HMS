@@ -31,13 +31,20 @@ ALTER TABLE lab_tests ADD COLUMN IF NOT EXISTS "referenceRange" TEXT;
 -- ==========================================
 -- 4. LABORATORY MODULE - CREATE LAB ENTRIES
 -- ==========================================
+-- First ensure TestStatus enum exists
+DO $$ BEGIN
+  CREATE TYPE "TestStatus" AS ENUM ('ORDERED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS lab_entries (
   id TEXT PRIMARY KEY,
   "tenantId" TEXT NOT NULL,
   "patientId" TEXT NOT NULL,
   "entryNumber" TEXT NOT NULL,
   "totalAmount" DOUBLE PRECISION NOT NULL,
-  status TEXT NOT NULL DEFAULT 'ORDERED',
+  status "TestStatus" NOT NULL DEFAULT 'ORDERED'::"TestStatus",
   "sampleType" TEXT,
   notes TEXT,
   "billedToFinal" BOOLEAN NOT NULL DEFAULT false,
@@ -67,7 +74,7 @@ CREATE TABLE IF NOT EXISTS lab_entry_items (
   result TEXT,
   unit TEXT,
   "referenceRange" TEXT,
-  status TEXT NOT NULL DEFAULT 'ORDERED',
+  status "TestStatus" NOT NULL DEFAULT 'ORDERED'::"TestStatus",
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT "lab_entry_items_labEntryId_fkey" FOREIGN KEY ("labEntryId") REFERENCES lab_entries(id) ON DELETE CASCADE,

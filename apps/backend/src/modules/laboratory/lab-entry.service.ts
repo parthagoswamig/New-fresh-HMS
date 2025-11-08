@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TestStatus } from '@prisma/client';
 import { CreateLabEntryDto } from './dto/create-lab-entry.dto';
 import { AddLabResultsDto } from './dto/add-lab-results.dto';
 
@@ -128,7 +129,8 @@ export class LabEntryService {
     }
 
     if (status) {
-      where.status = status as any;
+      // Convert string status to enum
+      where.status = TestStatus[status as keyof typeof TestStatus];
     }
 
     const [entries, total] = await Promise.all([
@@ -394,9 +396,9 @@ export class LabEntryService {
   async getStats(tenantId: string) {
     const [total, ordered, inProgress, completed] = await Promise.all([
       this.prisma.labEntry.count({ where: { tenantId } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'ORDERED' as any } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'IN_PROGRESS' as any } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'COMPLETED' as any } }),
+      this.prisma.labEntry.count({ where: { tenantId, status: TestStatus.ORDERED } }),
+      this.prisma.labEntry.count({ where: { tenantId, status: TestStatus.IN_PROGRESS } }),
+      this.prisma.labEntry.count({ where: { tenantId, status: TestStatus.COMPLETED } }),
     ]);
 
     return {
