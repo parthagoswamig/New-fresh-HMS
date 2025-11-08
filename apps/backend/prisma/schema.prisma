@@ -117,6 +117,8 @@ model Tenant {
   prescriptions Prescription[]
   labOrders     LabOrder[]
   labEntries    LabEntry[]
+  radiologyTests RadiologyTest[]
+  patientRadiology PatientRadiology[]
 
   @@map("tenants")
 }
@@ -176,6 +178,7 @@ model Staff {
   attendances     Attendance[]
   labEntriesCreated LabEntry[] @relation("LabEntryCreatedBy")
   labReports      LabReport[]  @relation("LabReportReportedBy")
+  radiologyCreated PatientRadiology[] @relation("RadiologyCreatedBy")
 
   @@unique([tenantId, employeeId])
   @@index([tenantId])
@@ -215,6 +218,7 @@ model Patient {
   insurances        Insurance[]
   labOrders         LabOrder[]
   labEntries        LabEntry[]
+  radiologyTests    PatientRadiology[]
 
   @@unique([tenantId, patientId])
   @@index([tenantId])
@@ -685,4 +689,54 @@ model Setting {
   @@unique([tenantId, key])
   @@index([tenantId])
   @@map("settings")
+}
+
+// ==================== RADIOLOGY ====================
+model RadiologyTest {
+  id              String              @id @default(cuid())
+  tenantId        String
+  name            String
+  code            String
+  description     String?
+  price           Float
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientTests    PatientRadiology[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("radiology_tests")
+}
+
+enum RadiologyStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model PatientRadiology {
+  id              String            @id @default(cuid())
+  tenantId        String
+  patientId       String
+  testId          String
+  resultSummary   String?
+  radiologist     String?
+  reportUrl       String?
+  status          RadiologyStatus   @default(PENDING)
+  createdById     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient           @relation(fields: [patientId], references: [id])
+  radiologyTest   RadiologyTest     @relation(fields: [testId], references: [id])
+  createdBy       Staff             @relation("RadiologyCreatedBy", fields: [createdById], references: [id])
+
+  @@index([tenantId])
+  @@index([patientId])
+  @@map("patient_radiology")
 }

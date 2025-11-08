@@ -12,6 +12,7 @@ import { OpdModule } from './modules/opd/opd.module';
 import { IpdModule } from './modules/ipd/ipd.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { LaboratoryModule } from './modules/laboratory/laboratory.module';
+import { RadiologyModule } from './modules/radiology/radiology.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { InsuranceModule } from './modules/insurance/insurance.module';
 import { HrModule } from './modules/hr/hr.module';
@@ -35,6 +36,7 @@ import { DepartmentModule } from './modules/department/department.module';
     IpdModule,
     PharmacyModule,
     LaboratoryModule,
+    RadiologyModule,
     BillingModule,
     InsuranceModule,
     HrModule,
