@@ -433,12 +433,15 @@ model LabTest {
   category    String?
   price       Float
   description String?
+  unit        String?
+  referenceRange String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   labOrders   LabOrder[]
+  entryItems  LabEntryItem[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -478,6 +481,72 @@ model LabOrder {
   @@map("lab_orders")
 }
 
+model LabEntry {
+  id              String      @id @default(cuid())
+  tenantId        String
+  patientId       String
+  entryNumber     String
+  totalAmount     Float
+  status          TestStatus  @default(ORDERED)
+  sampleType      String?
+  notes           String?
+  billedToFinal   Boolean     @default(false)
+  billId          String?
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  createdBy       Staff       @relation(fields: [createdById], references: [id])
+  bill            Bill?       @relation(fields: [billId], references: [id])
+  items           LabEntryItem[]
+  report          LabReport?
+
+  @@unique([tenantId, entryNumber])
+  @@index([tenantId])
+  @@index([patientId])
+  @@map("lab_entries")
+}
+
+model LabEntryItem {
+  id              String    @id @default(cuid())
+  labEntryId      String
+  labTestId       String
+  testName        String
+  price           Float
+  result          String?
+  unit            String?
+  referenceRange  String?
+  status          TestStatus @default(ORDERED)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  labEntry        LabEntry  @relation(fields: [labEntryId], references: [id], onDelete: Cascade)
+  labTest         LabTest   @relation(fields: [labTestId], references: [id])
+
+  @@map("lab_entry_items")
+}
+
+model LabReport {
+  id              String    @id @default(cuid())
+  labEntryId      String    @unique
+  comments        String?
+  findings        String?
+  interpretation  String?
+  printed         Boolean   @default(false)
+  printedAt       DateTime?
+  reportedById    String
+  reportedAt      DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  labEntry        LabEntry  @relation(fields: [labEntryId], references: [id], onDelete: Cascade)
+  reportedBy      Staff     @relation(fields: [reportedById], references: [id])
+
+  @@map("lab_reports")
+}
+
 // ==================== BILLING ====================
 model Bill {
   id                String        @id @default(cuid())
@@ -500,6 +569,7 @@ model Bill {
   patient           Patient       @relation(fields: [patientId], references: [id])
   items             BillItem[]
   payments          Payment[]
+  labEntries        LabEntry[]
 
   @@unique([tenantId, billNumber])
   @@index([tenantId])
