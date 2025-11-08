@@ -128,7 +128,7 @@ export class LabEntryService {
     }
 
     if (status) {
-      where.status = status;
+      where.status = status as any;
     }
 
     const [entries, total] = await Promise.all([
@@ -392,28 +392,18 @@ export class LabEntryService {
   }
 
   async getStats(tenantId: string) {
-    const [total, pending, inProgress, completed, todayEntries] = await Promise.all([
+    const [total, ordered, inProgress, completed] = await Promise.all([
       this.prisma.labEntry.count({ where: { tenantId } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'ORDERED' } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'IN_PROGRESS' } }),
-      this.prisma.labEntry.count({ where: { tenantId, status: 'COMPLETED' } }),
-      this.prisma.labEntry.count({
-        where: {
-          tenantId,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lt: new Date(new Date().setHours(23, 59, 59, 999)),
-          },
-        },
-      }),
+      this.prisma.labEntry.count({ where: { tenantId, status: 'ORDERED' as any } }),
+      this.prisma.labEntry.count({ where: { tenantId, status: 'IN_PROGRESS' as any } }),
+      this.prisma.labEntry.count({ where: { tenantId, status: 'COMPLETED' as any } }),
     ]);
 
     return {
       total,
-      pending,
+      ordered,
       inProgress,
       completed,
-      todayEntries,
     };
   }
 
