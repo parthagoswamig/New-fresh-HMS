@@ -8,14 +8,28 @@ export class LabEntryService {
   constructor(private prisma: PrismaService) {}
 
   async createEntry(tenantId: string, userId: string, dto: CreateLabEntryDto) {
+    // Fetch lab tests with prices
+    const testIds = dto.tests.map(t => t.labTestId);
+    const labTests = await this.prisma.labTest.findMany({
+      where: {
+        id: { in: testIds },
+        tenantId,
+        isActive: true,
+      },
+    });
+
+    if (labTests.length !== testIds.length) {
+      throw new BadRequestException('One or more lab tests not found or inactive');
+    }
+
+    // Calculate total amount from fetched prices
+    const totalAmount = labTests.reduce((sum, test) => sum + test.price, 0);
+
     // Generate entry number
     const count = await this.prisma.labEntry.count({ where: { tenantId } });
     const entryNumber = `LAB${String(count + 1).padStart(6, '0')}`;
 
-    // Calculate total amount
-    const totalAmount = dto.tests.reduce((sum, test) => sum + test.price, 0);
-
-    // Create lab entry with items
+    // Create lab entry with items (auto-populate from lab tests)
     const labEntry = await this.prisma.labEntry.create({
       data: {
         tenantId,
@@ -26,9 +40,9 @@ export class LabEntryService {
         notes: dto.notes,
         createdById: userId,
         items: {
-          create: dto.tests.map((test) => ({
-            labTestId: test.labTestId,
-            testName: test.testName,
+          create: labTests.map((test) => ({
+            labTestId: test.id,
+            testName: test.name,
             price: test.price,
             unit: test.unit,
             referenceRange: test.referenceRange,

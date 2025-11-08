@@ -38,7 +38,7 @@ const menuItems = [
   { icon: Siren, label: 'Emergency', href: '/dashboard/emergency' },
   { icon: Scissors, label: 'Surgery', href: '/dashboard/surgery' },
   { icon: Pill, label: 'Pharmacy', href: '/dashboard/pharmacy' },
-  { icon: FlaskConical, label: 'Laboratory', href: '/dashboard/lab-tests' },
+  { icon: FlaskConical, label: 'Laboratory', href: '/dashboard/lab-entries' },
   { icon: Scan, label: 'Radiology', href: '/dashboard/radiology' },
   { icon: Receipt, label: 'Billing', href: '/dashboard/billing' },
   { icon: Shield, label: 'Insurance', href: '/dashboard/insurance' },
