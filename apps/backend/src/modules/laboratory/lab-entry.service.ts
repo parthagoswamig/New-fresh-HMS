@@ -9,6 +9,17 @@ export class LabEntryService {
   constructor(private prisma: PrismaService) {}
 
   async createEntry(tenantId: string, userId: string, dto: CreateLabEntryDto) {
+    // Validate staff exists
+    const staff = await this.prisma.staff.findUnique({
+      where: { id: userId },
+    });
+
+    if (!staff) {
+      throw new BadRequestException(
+        `Staff record not found for ID: ${userId}. Please ensure you have a staff profile.`
+      );
+    }
+
     // Fetch lab tests with prices
     const testIds = dto.tests.map(t => t.labTestId);
     const labTests = await this.prisma.labTest.findMany({
