@@ -31,4 +31,9 @@ export const ipdService = {
     apiClient.get('/ipd/stats', {
       headers: { 'x-tenant-id': tenantId },
     }),
+
+  discharge: (id: string, data: { dischargeSummary: string }, tenantId: string) =>
+    apiClient.patch(`/ipd/${id}/discharge`, data, {
+      headers: { 'x-tenant-id': tenantId },
+    }),
 };

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateIpdDto } from './dto/create-ipd.dto';
 import { UpdateIpdDto } from './dto/update-ipd.dto';
+import { DischargeIpdDto } from './dto/discharge-ipd.dto';
 
 @Injectable()
 export class IpdService {
@@ -312,5 +313,59 @@ export class IpdService {
       discharged,
       underTreatment,
     };
+  }
+
+  async discharge(tenantId: string, id: string, dto: DischargeIpdDto) {
+    // Verify admission exists and belongs to tenant
+    const admission = await this.findOne(tenantId, id);
+
+    if (admission.status === 'DISCHARGED') {
+      throw new Error('Patient is already discharged');
+    }
+
+    // Update admission with discharge information
+    return this.prisma.iPDAdmission.update({
+      where: { id },
+      data: {
+        status: 'DISCHARGED',
+        dischargeDate: new Date(),
+        dischargeSummary: dto.dischargeSummary,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            patientId: true,
+            phone: true,
+            email: true,
+            dateOfBirth: true,
+            gender: true,
+            bloodGroup: true,
+            address: true,
+          },
+        },
+        doctor: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
+        department: true,
+        bed: {
+          include: {
+            ward: true,
+          },
+        },
+      },
+    });
   }
 }

@@ -16,6 +16,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@ne
 import { BillingService } from './billing.service';
 import { CreateBillingDto } from './dto/create-billing.dto';
 import { UpdateBillingDto } from './dto/update-billing.dto';
+import { AddPaymentDto } from './dto/add-payment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('billing')
@@ -92,6 +93,30 @@ export class BillingController {
       throw new Error('Tenant ID is required');
     }
     return this.billingService.update(tenantId, id, updateBillingDto);
+  }
+
+  @Post(':id/payment')
+  @ApiOperation({ summary: 'Add payment to invoice' })
+  @ApiResponse({ status: 200, description: 'Payment added successfully' })
+  addPayment(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Body() addPaymentDto: AddPaymentDto,
+  ) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.billingService.addPayment(tenantId, id, addPaymentDto);
+  }
+
+  @Patch(':id/finalize')
+  @ApiOperation({ summary: 'Finalize invoice (lock from edits)' })
+  @ApiResponse({ status: 200, description: 'Invoice finalized successfully' })
+  finalize(@Headers('x-tenant-id') tenantId: string, @Param('id') id: string) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.billingService.finalizeBill(tenantId, id);
   }
 
   @Delete(':id')

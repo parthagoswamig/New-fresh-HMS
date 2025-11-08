@@ -16,6 +16,12 @@ export class BillItemDto {
   @IsNumber()
   @Min(0)
   unitPrice: number;
+
+  @ApiPropertyOptional({ description: 'Discount amount per item', default: 0 })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  discount?: number;
 }
 
 export class CreateBillingDto {
@@ -38,6 +44,12 @@ export class CreateBillingDto {
   @IsOptional()
   @Min(0)
   discountAmount?: number;
+
+  @ApiPropertyOptional({ description: 'Insurance covered amount', default: 0 })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  insuranceCovered?: number;
 
   @ApiPropertyOptional({ description: 'Notes' })
   @IsString()

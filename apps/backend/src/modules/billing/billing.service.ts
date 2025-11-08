@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateBillingDto } from './dto/create-billing.dto';
 import { UpdateBillingDto } from './dto/update-billing.dto';
+import { AddPaymentDto } from './dto/add-payment.dto';
 
 @Injectable()
 export class BillingService {
@@ -12,9 +13,14 @@ export class BillingService {
     const count = await this.prisma.bill.count({ where: { tenantId } });
     const billNumber = `INV${String(count + 1).padStart(6, '0')}`;
 
-    // Calculate total amount
-    const subtotal = dto.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    const totalAmount = subtotal - (dto.discountAmount || 0);
+    // Calculate total amount with item-level discounts
+    const itemsTotal = dto.items.reduce((sum, item) => {
+      const itemSubtotal = item.quantity * item.unitPrice;
+      const itemDiscount = item.discount || 0;
+      return sum + (itemSubtotal - itemDiscount);
+    }, 0);
+    
+    const totalAmount = itemsTotal - (dto.discountAmount || 0) - (dto.insuranceCovered || 0);
 
     return this.prisma.bill.create({
       data: {
@@ -23,6 +29,7 @@ export class BillingService {
         billNumber,
         totalAmount,
         discountAmount: dto.discountAmount || 0,
+        insuranceCovered: dto.insuranceCovered || 0,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         notes: dto.notes,
         status: dto.status as any || 'PENDING',
@@ -31,7 +38,8 @@ export class BillingService {
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            amount: item.quantity * item.unitPrice,
+            discount: item.discount || 0,
+            amount: (item.quantity * item.unitPrice) - (item.discount || 0),
           })),
         },
       },
@@ -240,5 +248,99 @@ export class BillingService {
       cancelled,
       totalRevenue: totalRevenue._sum.totalAmount || 0,
     };
+  }
+
+  async addPayment(tenantId: string, billId: string, dto: AddPaymentDto) {
+    // Verify bill exists and belongs to tenant
+    const bill = await this.findOne(tenantId, billId);
+
+    if (bill.finalized === false) {
+      throw new BadRequestException('Cannot add payment to non-finalized bill');
+    }
+
+    const outstandingAmount = bill.totalAmount - bill.paidAmount;
+
+    if (dto.amount > outstandingAmount) {
+      throw new BadRequestException(`Payment amount (${dto.amount}) exceeds outstanding balance (${outstandingAmount})`);
+    }
+
+    // Create payment record
+    const payment = await this.prisma.payment.create({
+      data: {
+        billId,
+        amount: dto.amount,
+        paymentMethod: dto.paymentMethod as any,
+        transactionId: dto.transactionId,
+        notes: dto.notes,
+      },
+    });
+
+    // Update bill paid amount and status
+    const newPaidAmount = bill.paidAmount + dto.amount;
+    const newStatus = newPaidAmount >= bill.totalAmount ? 'PAID' : 'PARTIALLY_PAID';
+
+    const updatedBill = await this.prisma.bill.update({
+      where: { id: billId },
+      data: {
+        paidAmount: newPaidAmount,
+        status: newStatus as any,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            patientId: true,
+            phone: true,
+            email: true,
+            dateOfBirth: true,
+            gender: true,
+            bloodGroup: true,
+            address: true,
+          },
+        },
+        items: true,
+        payments: {
+          orderBy: { paymentDate: 'desc' },
+        },
+      },
+    });
+
+    return updatedBill;
+  }
+
+  async finalizeBill(tenantId: string, billId: string) {
+    // Verify bill exists and belongs to tenant
+    const bill = await this.findOne(tenantId, billId);
+
+    if (bill.finalized) {
+      throw new BadRequestException('Bill is already finalized');
+    }
+
+    return this.prisma.bill.update({
+      where: { id: billId },
+      data: { finalized: true },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            patientId: true,
+            phone: true,
+            email: true,
+            dateOfBirth: true,
+            gender: true,
+            bloodGroup: true,
+            address: true,
+          },
+        },
+        items: true,
+        payments: {
+          orderBy: { paymentDate: 'desc' },
+        },
+      },
+    });
   }
 }

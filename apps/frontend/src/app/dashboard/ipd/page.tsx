@@ -16,10 +16,13 @@ import {
   UserCheck,
   UserX,
   Activity,
+  FileText,
 } from 'lucide-react';
 import { ipdService } from '@/services/ipd.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
+import DischargeModal from '@/components/ipd/DischargeModal';
+import DischargeReport from '@/components/ipd/DischargeReport';
 
 export default function IPDPage() {
   const router = useRouter();
@@ -30,6 +33,9 @@ export default function IPDPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [dischargeModalOpen, setDischargeModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedAdmission, setSelectedAdmission] = useState<any>(null);
 
   useEffect(() => {
     fetchAdmissions();
@@ -73,6 +79,37 @@ export default function IPDPage() {
     } catch (error) {
       console.error('Failed to delete admission:', error);
       alert('Failed to delete admission');
+    }
+  };
+
+  const handleDischargeClick = (admission: any) => {
+    setSelectedAdmission(admission);
+    setDischargeModalOpen(true);
+  };
+
+  const handleDischargeConfirm = async (dischargeSummary: string) => {
+    if (!selectedAdmission) return;
+
+    try {
+      const response = await ipdService.discharge(
+        selectedAdmission.id,
+        { dischargeSummary },
+        tenant?.id || ''
+      );
+      
+      // Update the selected admission with discharge data
+      setSelectedAdmission(response.data);
+      
+      // Refresh lists
+      await fetchAdmissions();
+      await fetchStats();
+      
+      // Close discharge modal and open report
+      setDischargeModalOpen(false);
+      setReportModalOpen(true);
+    } catch (error) {
+      console.error('Failed to discharge patient:', error);
+      throw error;
     }
   };
 
@@ -305,6 +342,16 @@ export default function IPDPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
+                            {admission.status !== 'DISCHARGED' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDischargeClick(admission)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -377,6 +424,17 @@ export default function IPDPage() {
                             Edit
                           </Button>
                         </Link>
+                        {admission.status !== 'DISCHARGED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-green-600 border-green-600 hover:bg-green-50"
+                            onClick={() => handleDischargeClick(admission)}
+                          >
+                            <FileText className="w-4 h-4 mr-1" />
+                            Discharge
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -409,6 +467,26 @@ export default function IPDPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Discharge Modal */}
+      {dischargeModalOpen && selectedAdmission && (
+        <DischargeModal
+          admission={selectedAdmission}
+          onClose={() => setDischargeModalOpen(false)}
+          onConfirm={handleDischargeConfirm}
+        />
+      )}
+
+      {/* Discharge Report */}
+      {reportModalOpen && selectedAdmission && (
+        <DischargeReport
+          admission={selectedAdmission}
+          onClose={() => {
+            setReportModalOpen(false);
+            setSelectedAdmission(null);
+          }}
+        />
+      )}
     </div>
   );
 }

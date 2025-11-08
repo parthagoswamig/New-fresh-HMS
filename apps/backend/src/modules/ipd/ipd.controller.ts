@@ -16,6 +16,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagg
 import { IpdService } from './ipd.service';
 import { CreateIpdDto } from './dto/create-ipd.dto';
 import { UpdateIpdDto } from './dto/update-ipd.dto';
+import { DischargeIpdDto } from './dto/discharge-ipd.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @ApiTags('ipd')
@@ -98,6 +99,20 @@ export class IpdController {
       throw new Error('Tenant ID is required');
     }
     return this.ipdService.update(tenantId, id, updateIpdDto);
+  }
+
+  @Patch(':id/discharge')
+  @ApiOperation({ summary: 'Discharge patient from IPD' })
+  @ApiResponse({ status: 200, description: 'Patient discharged successfully' })
+  discharge(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('id') id: string,
+    @Body() dischargeDto: DischargeIpdDto,
+  ) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.ipdService.discharge(tenantId, id, dischargeDto);
   }
 
   @Delete(':id')

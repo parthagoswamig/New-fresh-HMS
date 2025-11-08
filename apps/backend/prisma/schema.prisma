@@ -480,24 +480,26 @@ model LabOrder {
 
 // ==================== BILLING ====================
 model Bill {
-  id              String        @id @default(cuid())
-  tenantId        String
-  patientId       String
-  billNumber      String
-  billDate        DateTime      @default(now())
-  totalAmount     Float
-  paidAmount      Float         @default(0)
-  discountAmount  Float         @default(0)
-  status          BillingStatus @default(PENDING)
-  dueDate         DateTime?
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  tenantId          String
+  patientId         String
+  billNumber        String
+  billDate          DateTime      @default(now())
+  totalAmount       Float
+  paidAmount        Float         @default(0)
+  discountAmount    Float         @default(0)
+  insuranceCovered  Float         @default(0)
+  status            BillingStatus @default(PENDING)
+  dueDate           DateTime?
+  notes             String?
+  finalized         Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  items           BillItem[]
-  payments        Payment[]
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient           Patient       @relation(fields: [patientId], references: [id])
+  items             BillItem[]
+  payments          Payment[]
 
   @@unique([tenantId, billNumber])
   @@index([tenantId])
@@ -511,6 +513,7 @@ model BillItem {
   description String
   quantity    Int
   unitPrice   Float
+  discount    Float    @default(0)
   amount      Float
   createdAt   DateTime @default(now())
 
