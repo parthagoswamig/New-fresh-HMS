@@ -47,7 +47,7 @@ export class LabEntryService {
             price: test.price,
             unit: test.unit,
             referenceRange: test.referenceRange,
-            status: 'ORDERED',
+            status: TestStatus.ORDERED,
           })),
         },
       },
@@ -277,7 +277,7 @@ export class LabEntryService {
           result: result.result,
           unit: result.unit,
           referenceRange: result.referenceRange,
-          status: 'COMPLETED',
+          status: TestStatus.COMPLETED,
         },
       });
     }
@@ -326,7 +326,7 @@ export class LabEntryService {
     // Update entry status to COMPLETED
     await this.prisma.labEntry.update({
       where: { id: entryId },
-      data: { status: 'COMPLETED' },
+      data: { status: TestStatus.COMPLETED },
     });
 
     return report;
