@@ -25,7 +25,7 @@ export const dashboardService = {
         }).catch(() => ({ data: { total: 0, active: 0 } })),
         apiClient.get('/billing/stats', {
           headers: { 'x-tenant-id': tenantId },
-        }).catch(() => ({ data: { pending: 0, totalRevenue: 0 } })),
+        }).catch(() => ({ data: { pendingAmount: 0, totalRevenue: 0 } })),
       ]);
 
       return {
@@ -34,7 +34,7 @@ export const dashboardService = {
         opd: opdStats.data,
         ipd: ipdStats.data,
         billing: {
-          pending: billingStats.data.pending || 0,
+          pending: billingStats.data.pendingAmount || 0,
           revenue: billingStats.data.totalRevenue || 0,
         },
       };

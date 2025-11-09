@@ -220,7 +220,16 @@ export class BillingService {
   }
 
   async getStats(tenantId: string) {
-    const [total, pending, paid, partiallyPaid, cancelled, totalRevenue] = await Promise.all([
+    const [
+      total,
+      pendingCount,
+      paid,
+      partiallyPaid,
+      cancelled,
+      totalRevenue,
+      pendingAmount,
+      partiallyPaidAmount,
+    ] = await Promise.all([
       this.prisma.bill.count({ where: { tenantId } }),
       this.prisma.bill.count({
         where: { tenantId, status: 'PENDING' },
@@ -238,15 +247,42 @@ export class BillingService {
         where: { tenantId, status: 'PAID' },
         _sum: { totalAmount: true },
       }),
+      // Calculate total pending amount (PENDING bills)
+      this.prisma.bill.aggregate({
+        where: { tenantId, status: 'PENDING' },
+        _sum: { totalAmount: true },
+      }),
+      // Calculate partially paid outstanding amount
+      this.prisma.bill.aggregate({
+        where: { tenantId, status: 'PARTIALLY_PAID' },
+        _sum: { totalAmount: true },
+      }),
     ]);
+
+    // Calculate total outstanding (pending + partially paid balance)
+    const pendingTotal = pendingAmount._sum.totalAmount || 0;
+    const partiallyPaidTotal = partiallyPaidAmount._sum.totalAmount || 0;
+    
+    // For partially paid, we need to subtract what's already paid
+    const partiallyPaidBills = await this.prisma.bill.findMany({
+      where: { tenantId, status: 'PARTIALLY_PAID' },
+      select: { totalAmount: true, paidAmount: true },
+    });
+    
+    const partiallyPaidOutstanding = partiallyPaidBills.reduce(
+      (sum, bill) => sum + (bill.totalAmount - bill.paidAmount),
+      0
+    );
 
     return {
       total,
-      pending,
+      pending: pendingCount,
       paid,
       partiallyPaid,
       cancelled,
       totalRevenue: totalRevenue._sum.totalAmount || 0,
+      pendingAmount: pendingTotal + partiallyPaidOutstanding,
+      totalOutstanding: pendingTotal + partiallyPaidOutstanding,
     };
   }
 

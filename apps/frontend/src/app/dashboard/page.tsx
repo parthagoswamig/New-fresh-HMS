@@ -50,63 +50,85 @@ export default function DashboardPage() {
     {
       title: 'Total Patients',
       value: loading ? '...' : (stats?.patients?.total || 0).toString(),
+      subtitle: 'Registered patients',
       icon: Users,
       color: 'blue',
       bgColor: 'bg-blue-100',
       textColor: 'text-blue-600',
+      link: '/dashboard/patients',
     },
     {
       title: 'Appointments Today',
       value: loading ? '...' : (stats?.appointments?.today || 0).toString(),
+      subtitle: `Total: ${stats?.appointments?.total || 0}`,
       icon: Calendar,
       color: 'green',
       bgColor: 'bg-green-100',
       textColor: 'text-green-600',
+      link: '/dashboard/appointments',
     },
     {
       title: 'OPD Visits',
       value: loading ? '...' : (stats?.opd?.total || 0).toString(),
+      subtitle: 'Total consultations',
       icon: Stethoscope,
       color: 'purple',
       bgColor: 'bg-purple-100',
       textColor: 'text-purple-600',
+      link: '/dashboard/opd',
     },
     {
-      title: 'IPD Admissions',
+      title: 'Active IPD',
       value: loading ? '...' : (stats?.ipd?.active || 0).toString(),
+      subtitle: `Total: ${stats?.ipd?.total || 0}`,
       icon: Bed,
       color: 'orange',
       bgColor: 'bg-orange-100',
       textColor: 'text-orange-600',
+      link: '/dashboard/ipd',
     },
     {
       title: 'Pending Bills',
       value: loading ? '...' : `₹${(stats?.billing?.pending || 0).toLocaleString()}`,
+      subtitle: 'Outstanding amount',
       icon: Receipt,
       color: 'red',
       bgColor: 'bg-red-100',
       textColor: 'text-red-600',
+      link: '/dashboard/billing',
     },
     {
       title: 'Revenue (MTD)',
       value: loading ? '...' : `₹${(stats?.billing?.revenue || 0).toLocaleString()}`,
+      subtitle: 'Total collected',
       icon: TrendingUp,
       color: 'indigo',
       bgColor: 'bg-indigo-100',
       textColor: 'text-indigo-600',
+      link: '/dashboard/billing',
     },
   ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       {/* Welcome Section */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Welcome back, {user?.firstName}!
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">
-          {tenant?.name} - Dashboard Overview
-        </p>
+      <div className="mb-6 sm:mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Welcome back, {user?.firstName}!
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-2">
+            {tenant?.name} - Dashboard Overview
+          </p>
+        </div>
+        <button
+          onClick={fetchDashboardData}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Activity className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -114,23 +136,28 @@ export default function DashboardPage() {
         {dashboardStats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">
-                      {stat.title}
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
-                      {stat.value}
-                    </p>
+            <Link key={stat.title} href={stat.link}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-600">
+                        {stat.title}
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 mt-2">
+                        {stat.value}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {stat.subtitle}
+                      </p>
+                    </div>
+                    <div className={`w-12 h-12 rounded-full ${stat.bgColor} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className={`w-6 h-6 ${stat.textColor}`} />
+                    </div>
                   </div>
-                  <div className={`w-12 h-12 rounded-full ${stat.bgColor} flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 ${stat.textColor}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           );
         })}
       </div>
@@ -225,39 +252,39 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Getting Started Guide */}
-      <Card className="mt-6 border-blue-200 bg-blue-50">
+      {/* System Status */}
+      <Card className="mt-6 border-green-200 bg-green-50">
         <CardHeader>
-          <CardTitle className="text-blue-900">Getting Started</CardTitle>
+          <CardTitle className="text-green-900 flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2" />
+            System Status
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-start">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
-                1
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-900">
+                {stats?.patients?.active || 0}
               </div>
-              <div>
-                <p className="font-medium text-blue-900">Add Staff Members</p>
-                <p className="text-sm text-blue-700">Go to Staff module to add doctors, nurses, and other staff</p>
-              </div>
+              <p className="text-sm text-green-700">Active Patients</p>
             </div>
-            <div className="flex items-start">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
-                2
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-900">
+                {stats?.appointments?.upcoming || 0}
               </div>
-              <div>
-                <p className="font-medium text-blue-900">Register Patients</p>
-                <p className="text-sm text-blue-700">Add patient records with their medical history</p>
-              </div>
+              <p className="text-sm text-green-700">Upcoming Appointments</p>
             </div>
-            <div className="flex items-start">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
-                3
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-900">
+                {stats?.billing?.paid || 0}
               </div>
-              <div>
-                <p className="font-medium text-blue-900">Schedule Appointments</p>
-                <p className="text-sm text-blue-700">Start booking appointments for your patients</p>
+              <p className="text-sm text-green-700">Paid Bills</p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-900">
+                {stats?.ipd?.discharged || 0}
               </div>
+              <p className="text-sm text-green-700">Discharged Today</p>
             </div>
           </div>
         </CardContent>
