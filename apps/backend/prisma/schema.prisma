@@ -19,6 +19,7 @@ enum Role {
   PHARMACIST
   HR_MANAGER
   ACCOUNTANT
+  FINANCE_MANAGER
   PATIENT
 }
 
@@ -59,9 +60,11 @@ enum BillingStatus {
 enum PaymentMethod {
   CASH
   CARD
+  ONLINE
   UPI
-  INSURANCE
   BANK_TRANSFER
+  CHEQUE
+  INSURANCE
 }
 
 enum TestStatus {
@@ -118,6 +121,18 @@ model Tenant {
   insurancePolicies InsurancePolicy[]
   patientInsurances PatientInsurance[]
   insuranceClaims InsuranceClaim[]
+  financeTransactions FinanceTransaction[]
+  financeBudgets FinanceBudget[]
+  operatingRooms OperatingRoom[]
+  surgeries Surgery[]
+  emergencyCases EmergencyCase[]
+  suppliers Supplier[]
+  inventoryItems InventoryItem[]
+  stockBatches StockBatch[]
+  purchaseOrders PurchaseOrder[]
+  requisitions Requisition[]
+  stockTransfers StockTransfer[]
+  stockAdjustments StockAdjustment[]
 
   @@map("tenants")
 }
@@ -179,6 +194,26 @@ model Staff {
   labReports      LabReport[]  @relation("LabReportReportedBy")
   radiologyCreated PatientRadiology[] @relation("RadiologyCreatedBy")
   claimsCreated   InsuranceClaim[] @relation("ClaimCreatedBy")
+  financeTransactions FinanceTransaction[]
+  financeTransactionsCreated FinanceTransaction[] @relation("FinanceCreatedBy")
+  financeBudgets  FinanceBudget[]
+  surgeriesAsSurgeon Surgery[] @relation("SurgerySurgeon")
+  surgeriesAsAnesthesiologist Surgery[] @relation("SurgeryAnesthesiologist")
+  surgeriesCreated Surgery[] @relation("SurgeryCreatedBy")
+  surgeriesCancelled Surgery[] @relation("SurgeryCancelledBy")
+  emergenciesAsFirstResponder EmergencyCase[] @relation("EmergencyFirstResponder")
+  emergenciesAsTriageNurse EmergencyCase[] @relation("EmergencyTriageNurse")
+  emergenciesAsAttendingDoctor EmergencyCase[] @relation("EmergencyAttendingDoctor")
+  emergencyCasesCreated EmergencyCase[] @relation("EmergencyCreatedBy")
+  emergencyCasesUpdated EmergencyCase[] @relation("EmergencyUpdatedBy")
+  purchaseOrdersApproved PurchaseOrder[] @relation("POApprovedBy")
+  purchaseOrdersCreated PurchaseOrder[] @relation("POCreatedBy")
+  requisitionsRequested Requisition[] @relation("RequisitionRequestedBy")
+  requisitionsApproved Requisition[] @relation("RequisitionApprovedBy")
+  requisitionsIssued Requisition[] @relation("RequisitionIssuedBy")
+  transfersRequested StockTransfer[] @relation("TransferRequestedBy")
+  transfersApproved StockTransfer[] @relation("TransferApprovedBy")
+  stockAdjustments StockAdjustment[] @relation("AdjustmentBy")
 
   @@unique([tenantId, employeeId])
   @@index([tenantId])
@@ -221,6 +256,9 @@ model Patient {
   radiologyTests    PatientRadiology[]
   patientInsurances PatientInsurance[]
   insuranceClaims   InsuranceClaim[]
+  financeTransactions FinanceTransaction[]
+  surgeries         Surgery[]
+  emergencyCases    EmergencyCase[]
 
   @@unique([tenantId, patientId])
   @@index([tenantId])
@@ -241,6 +279,11 @@ model Department {
   staff         Staff[]
   opdVisits     OPDVisit[]
   ipdAdmissions IPDAdmission[]
+  stockBatches  StockBatch[]
+  requisitions  Requisition[]
+  transfersFrom StockTransfer[] @relation("TransferFrom")
+  transfersTo   StockTransfer[] @relation("TransferTo")
+  stockAdjustments StockAdjustment[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -364,6 +407,7 @@ model IPDAdmission {
   bed               Bed?            @relation(fields: [bedId], references: [id])
   prescriptions     Prescription[]
   labOrders         LabOrder[]
+  emergencyCases    EmergencyCase[]
 
   @@index([tenantId])
   @@index([patientId])
@@ -581,6 +625,8 @@ model Bill {
   payments          Payment[]
   labEntries        LabEntry[]
   insuranceClaims   InsuranceClaim[]
+  surgeries         Surgery[]
+  emergencyCases    EmergencyCase[]
 
   @@unique([tenantId, billNumber])
   @@index([tenantId])
@@ -867,4 +913,665 @@ model InsuranceClaim {
   @@index([policyId])
   @@index([status])
   @@map("insurance_claims")
+}
+
+// ==================== FINANCE MODULE ====================
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  ADVANCE
+  REFUND
+}
+
+enum TransactionSource {
+  MANUAL
+  BILLING
+  INSURANCE
+  INVENTORY
+  PAYROLL
+  PHARMACY
+  LABORATORY
+  RADIOLOGY
+  IPD
+  OPD
+  SURGERY
+  REFUND
+}
+
+enum FinanceCategory {
+  CONSULTATION_FEE
+  MEDICINE_SALES
+  LAB_TEST
+  RADIOLOGY
+  SURGERY_FEE
+  ROOM_CHARGES
+  INSURANCE_REIMBURSEMENT
+  SALARY
+  RENT
+  UTILITIES
+  EQUIPMENT
+  SUPPLIES
+  MAINTENANCE
+  MARKETING
+  REFUND
+  DONATION
+  OTHER
+}
+
+model FinanceTransaction {
+  id              String            @id @default(uuid())
+  tenantId        String
+  transactionNo   String            // FIN-YYYYMM-0001
+  type            TransactionType
+  amount          Float
+  sourceModule    TransactionSource
+  sourceReference String?           // e.g., billId, invoiceId, salaryId
+  reason          String
+  description     String?
+  paymentMethod   PaymentMethod
+  category        FinanceCategory
+  tags            String[]          @default([])
+  date            DateTime          @default(now())
+  attachments     Json?             // Array of file URLs
+  metadata        Json?             // Additional data from source module
+  
+  // Optional links
+  patientId       String?
+  staffId         String?
+  
+  // Audit
+  createdById     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient?          @relation(fields: [patientId], references: [id])
+  staff           Staff?            @relation(fields: [staffId], references: [id])
+  createdBy       Staff             @relation("FinanceCreatedBy", fields: [createdById], references: [id])
+  
+  @@unique([tenantId, transactionNo])
+  @@index([tenantId])
+  @@index([type])
+  @@index([sourceModule])
+  @@index([date])
+  @@index([category])
+  @@map("finance_transactions")
+}
+
+model FinanceBudget {
+  id          String          @id @default(uuid())
+  tenantId    String
+  name        String
+  category    FinanceCategory
+  amount      Float
+  period      String          // MONTHLY, QUARTERLY, YEARLY
+  startDate   DateTime
+  endDate     DateTime
+  spent       Float           @default(0)
+  createdById String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   Staff           @relation(fields: [createdById], references: [id])
+  
+  @@index([tenantId])
+  @@index([category])
+  @@map("finance_budgets")
+}
+
+// ==================== SURGERY MODULE ====================
+
+enum SurgeryStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SurgeryType {
+  GENERAL
+  ORTHOPEDIC
+  CARDIAC
+  NEUROSURGERY
+  PLASTIC
+  GYNECOLOGICAL
+  UROLOGICAL
+  OPHTHALMIC
+  ENT
+  PEDIATRIC
+  EMERGENCY
+  OTHER
+}
+
+model OperatingRoom {
+  id          String    @id @default(uuid())
+  tenantId    String
+  name        String
+  roomNumber  String
+  floor       String?
+  capacity    Int       @default(1)
+  equipment   Json?     // Array of equipment
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  surgeries   Surgery[]
+  
+  @@unique([tenantId, roomNumber])
+  @@index([tenantId])
+  @@map("operating_rooms")
+}
+
+model Surgery {
+  id                String        @id @default(uuid())
+  tenantId          String
+  surgeryNumber     String        // SUR-YYYYMM-0001
+  patientId         String
+  surgeonId         String
+  assistantIds      String[]      @default([])
+  anesthesiologistId String?
+  otRoomId          String
+  surgeryType       SurgeryType
+  procedureName     String
+  scheduledDate     DateTime
+  startTime         DateTime?
+  endTime           DateTime?
+  status            SurgeryStatus @default(SCHEDULED)
+  
+  // Clinical Details
+  preOpDiagnosis    String?
+  postOpDiagnosis   String?
+  preOpNote         String?
+  postOpNote        String?
+  complications     String?
+  bloodLoss         Float?        // in ml
+  duration          Int?          // in minutes
+  
+  // Equipment & Supplies
+  requiredEquipment Json?         // Array of equipment needed
+  implants          Json?         // Array of implants used
+  
+  // Documentation
+  consentFormUrl    String?
+  reportUrl         String?
+  attachments       Json?         // Array of file URLs
+  
+  // Billing
+  estimatedCost     Float
+  actualCost        Float?
+  billId            String?
+  
+  // Audit
+  cancelReason      String?
+  cancelledAt       DateTime?
+  cancelledById     String?
+  createdById       String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient           Patient       @relation(fields: [patientId], references: [id])
+  surgeon           Staff         @relation("SurgerySurgeon", fields: [surgeonId], references: [id])
+  anesthesiologist  Staff?        @relation("SurgeryAnesthesiologist", fields: [anesthesiologistId], references: [id])
+  operatingRoom     OperatingRoom @relation(fields: [otRoomId], references: [id])
+  bill              Bill?         @relation(fields: [billId], references: [id])
+  createdBy         Staff         @relation("SurgeryCreatedBy", fields: [createdById], references: [id])
+  cancelledBy       Staff?        @relation("SurgeryCancelledBy", fields: [cancelledById], references: [id])
+  
+  @@unique([tenantId, surgeryNumber])
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([surgeonId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("surgeries")
+}
+
+// Emergency Management Enums
+enum EmergencySeverity {
+  CRITICAL
+  SERIOUS
+  MODERATE
+  STABLE
+}
+
+enum EmergencyStatus {
+  WAITING
+  UNDER_TREATMENT
+  ADMITTED
+  TRANSFERRED
+  DISCHARGED
+  DECEASED
+}
+
+enum ArrivalMode {
+  AMBULANCE
+  WALK_IN
+  REFERRED
+  POLICE
+  OTHER
+}
+
+// Emergency Case Model
+model EmergencyCase {
+  id                  String            @id @default(cuid())
+  emergencyNumber     String
+  tenantId            String
+  
+  // Patient Information
+  patientId           String?
+  quickName           String?
+  quickAge            Int?
+  quickGender         String?
+  quickContact        String?
+  quickAddress        String?
+  
+  // Triage Information
+  severity            EmergencySeverity
+  chiefComplaint      String
+  arrivalMode         ArrivalMode
+  arrivalTime         DateTime          @default(now())
+  firstResponderId    String?
+  triageNurseId       String?
+  attendingDoctorId   String?
+  
+  // Vitals
+  bloodPressure       String?
+  heartRate           Int?
+  temperature         Float?
+  respiratoryRate     Int?
+  oxygenSaturation    Int?
+  
+  // Clinical Information
+  primaryDiagnosis    String?
+  secondaryDiagnosis  String?
+  allergies           String?
+  currentMedications  String?
+  medicalHistory      String?
+  
+  // Treatment Information
+  progressNotes       Json?             // Array of SOAP notes
+  interventions       Json?             // Array of interventions
+  investigations      Json?             // Lab/Radiology orders
+  medications         Json?             // Emergency medications
+  
+  // Status & Flow
+  status              EmergencyStatus   @default(WAITING)
+  treatmentStartTime  DateTime?
+  treatmentEndTime    DateTime?
+  
+  // Disposition
+  admittedToIpdId     String?
+  transferredTo       String?
+  transferReason      String?
+  dischargeTime       DateTime?
+  dischargeSummary    String?
+  dischargeAdvice     String?
+  followUpDate        DateTime?
+  
+  // Death Information
+  deathTime           DateTime?
+  causeOfDeath        String?
+  deathCertificateUrl String?
+  
+  // Billing
+  billId              String?
+  estimatedCost       Float?
+  actualCost          Float?
+  
+  // Audit
+  createdById         String
+  updatedById         String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  
+  // Relations
+  tenant              Tenant            @relation(fields: [tenantId], references: [id])
+  patient             Patient?          @relation(fields: [patientId], references: [id])
+  firstResponder      Staff?            @relation("EmergencyFirstResponder", fields: [firstResponderId], references: [id])
+  triageNurse         Staff?            @relation("EmergencyTriageNurse", fields: [triageNurseId], references: [id])
+  attendingDoctor     Staff?            @relation("EmergencyAttendingDoctor", fields: [attendingDoctorId], references: [id])
+  admittedToIpd       IPDAdmission?     @relation(fields: [admittedToIpdId], references: [id])
+  bill                Bill?             @relation(fields: [billId], references: [id])
+  createdBy           Staff             @relation("EmergencyCreatedBy", fields: [createdById], references: [id])
+  updatedBy           Staff?            @relation("EmergencyUpdatedBy", fields: [updatedById], references: [id])
+  
+  @@unique([tenantId, emergencyNumber])
+  @@index([tenantId])
+  @@index([patientId])
+  @@index([status])
+  @@index([severity])
+  @@index([arrivalTime])
+  @@map("emergency_cases")
+}
+
+// =====================================================
+// INVENTORY MANAGEMENT MODULE
+// =====================================================
+
+// Inventory Enums
+enum ItemCategory {
+  MEDICINE
+  CONSUMABLE
+  EQUIPMENT
+  SURGICAL
+  LABORATORY
+  GENERAL
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  EXPIRED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  APPROVED
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
+enum RequisitionStatus {
+  PENDING
+  APPROVED
+  PARTIALLY_ISSUED
+  ISSUED
+  REJECTED
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AdjustmentReason {
+  DAMAGE
+  LOSS
+  THEFT
+  SAMPLE
+  EXPIRED
+  CORRECTION
+  OTHER
+}
+
+// Supplier Model
+model Supplier {
+  id              String        @id @default(cuid())
+  tenantId        String
+  supplierCode    String
+  name            String
+  contactPerson   String?
+  phone           String?
+  email           String?
+  address         String?
+  gstNumber       String?
+  panNumber       String?
+  paymentTerms    String?
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItems  InventoryItem[]
+  purchaseOrders  PurchaseOrder[]
+  
+  @@unique([tenantId, supplierCode])
+  @@index([tenantId])
+  @@map("suppliers")
+}
+
+// Inventory Item Master
+model InventoryItem {
+  id              String        @id @default(cuid())
+  tenantId        String
+  itemCode        String
+  itemName        String
+  category        ItemCategory
+  subcategory     String?
+  unit            String        // e.g., Box, Strip, Piece, Liter
+  unitConversion  Json?         // e.g., {box: 10, strip: 1}
+  reorderLevel    Int           @default(10)
+  tax             Float         @default(0)
+  brand           String?
+  supplierId      String?
+  description     String?
+  departmentAccess Json?        // Array of department IDs with access
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id])
+  stockBatches    StockBatch[]
+  purchaseOrderItems PurchaseOrderItem[]
+  requisitionItems RequisitionItem[]
+  transferItems   TransferItem[]
+  adjustments     StockAdjustment[]
+  
+  @@unique([tenantId, itemCode])
+  @@index([tenantId])
+  @@index([category])
+  @@map("inventory_items")
+}
+
+// Stock Batch (for tracking batches with expiry)
+model StockBatch {
+  id              String        @id @default(cuid())
+  tenantId        String
+  itemId          String
+  batchNumber     String
+  departmentId    String?
+  quantity        Int
+  receivedQuantity Int
+  issuedQuantity  Int           @default(0)
+  availableQuantity Int
+  costPrice       Float
+  mrp             Float?
+  expiryDate      DateTime?
+  receivedDate    DateTime      @default(now())
+  invoiceNumber   String?
+  grnNumber       String?
+  status          StockStatus   @default(IN_STOCK)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  department      Department?   @relation(fields: [departmentId], references: [id])
+  
+  @@index([tenantId])
+  @@index([itemId])
+  @@index([expiryDate])
+  @@index([status])
+  @@map("stock_batches")
+}
+
+// Purchase Order
+model PurchaseOrder {
+  id              String        @id @default(cuid())
+  tenantId        String
+  poNumber        String
+  supplierId      String
+  orderDate       DateTime      @default(now())
+  expectedDeliveryDate DateTime?
+  status          PurchaseOrderStatus @default(DRAFT)
+  totalAmount     Float         @default(0)
+  tax             Float         @default(0)
+  grandTotal      Float         @default(0)
+  notes           String?
+  approvedById    String?
+  approvedAt      DateTime?
+  receivedAt      DateTime?
+  invoiceUrl      String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier        Supplier      @relation(fields: [supplierId], references: [id])
+  approvedBy      Staff?        @relation("POApprovedBy", fields: [approvedById], references: [id])
+  createdBy       Staff         @relation("POCreatedBy", fields: [createdById], references: [id])
+  items           PurchaseOrderItem[]
+  
+  @@unique([tenantId, poNumber])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_orders")
+}
+
+// Purchase Order Items
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  itemId          String
+  quantity        Int
+  receivedQuantity Int          @default(0)
+  unitPrice       Float
+  tax             Float         @default(0)
+  totalPrice      Float
+  createdAt       DateTime      @default(now())
+  
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  
+  @@index([purchaseOrderId])
+  @@index([itemId])
+  @@map("purchase_order_items")
+}
+
+// Departmental Requisition
+model Requisition {
+  id              String        @id @default(cuid())
+  tenantId        String
+  requisitionNumber String
+  departmentId    String
+  requestedById   String
+  status          RequisitionStatus @default(PENDING)
+  requestDate     DateTime      @default(now())
+  approvedById    String?
+  approvedAt      DateTime?
+  issuedById      String?
+  issuedAt        DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department      Department    @relation(fields: [departmentId], references: [id])
+  requestedBy     Staff         @relation("RequisitionRequestedBy", fields: [requestedById], references: [id])
+  approvedBy      Staff?        @relation("RequisitionApprovedBy", fields: [approvedById], references: [id])
+  issuedBy        Staff?        @relation("RequisitionIssuedBy", fields: [issuedById], references: [id])
+  items           RequisitionItem[]
+  
+  @@unique([tenantId, requisitionNumber])
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([status])
+  @@map("requisitions")
+}
+
+// Requisition Items
+model RequisitionItem {
+  id              String        @id @default(cuid())
+  requisitionId   String
+  itemId          String
+  requestedQuantity Int
+  approvedQuantity Int?
+  issuedQuantity  Int           @default(0)
+  createdAt       DateTime      @default(now())
+  
+  requisition     Requisition   @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  
+  @@index([requisitionId])
+  @@index([itemId])
+  @@map("requisition_items")
+}
+
+// Stock Transfer Between Departments
+model StockTransfer {
+  id              String        @id @default(cuid())
+  tenantId        String
+  transferNumber  String
+  fromDepartmentId String
+  toDepartmentId  String
+  requestedById   String
+  status          TransferStatus @default(PENDING)
+  requestDate     DateTime      @default(now())
+  approvedById    String?
+  approvedAt      DateTime?
+  completedAt     DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fromDepartment  Department    @relation("TransferFrom", fields: [fromDepartmentId], references: [id])
+  toDepartment    Department    @relation("TransferTo", fields: [toDepartmentId], references: [id])
+  requestedBy     Staff         @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+  approvedBy      Staff?        @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+  items           TransferItem[]
+  
+  @@unique([tenantId, transferNumber])
+  @@index([tenantId])
+  @@index([fromDepartmentId])
+  @@index([toDepartmentId])
+  @@index([status])
+  @@map("stock_transfers")
+}
+
+// Transfer Items
+model TransferItem {
+  id              String        @id @default(cuid())
+  transferId      String
+  itemId          String
+  quantity        Int
+  createdAt       DateTime      @default(now())
+  
+  transfer        StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  
+  @@index([transferId])
+  @@index([itemId])
+  @@map("transfer_items")
+}
+
+// Stock Adjustment (for manual corrections)
+model StockAdjustment {
+  id              String        @id @default(cuid())
+  tenantId        String
+  adjustmentNumber String
+  itemId          String
+  departmentId    String?
+  batchNumber     String?
+  quantityBefore  Int
+  quantityAfter   Int
+  adjustmentQuantity Int
+  reason          AdjustmentReason
+  reasonNotes     String?
+  adjustedById    String
+  adjustedAt      DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  department      Department?   @relation(fields: [departmentId], references: [id])
+  adjustedBy      Staff         @relation("AdjustmentBy", fields: [adjustedById], references: [id])
+  
+  @@unique([tenantId, adjustmentNumber])
+  @@index([tenantId])
+  @@index([itemId])
+  @@index([adjustedAt])
+  @@map("stock_adjustments")
 }

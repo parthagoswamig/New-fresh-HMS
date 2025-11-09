@@ -19,6 +19,10 @@ import { HrModule } from './modules/hr/hr.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { DepartmentModule } from './modules/department/department.module';
+import { FinanceModule } from './modules/finance/finance.module';
+import { SurgeryModule } from './modules/surgery/surgery.module';
+import { EmergencyModule } from './modules/emergency/emergency.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 
 @Module({
   imports: [
@@ -43,6 +47,10 @@ import { DepartmentModule } from './modules/department/department.module';
     SettingsModule,
     ReportsModule,
     DepartmentModule,
+    FinanceModule,
+    SurgeryModule,
+    EmergencyModule,
+    InventoryModule,
   ],
   controllers: [AppController],
 })
