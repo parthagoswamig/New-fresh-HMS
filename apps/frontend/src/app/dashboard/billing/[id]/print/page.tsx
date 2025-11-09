@@ -4,37 +4,34 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
-import { ProfessionalLabReport } from '@/components/lab/ProfessionalLabReport';
-import { labEntryService } from '@/services/lab-entry.service';
+import { ProfessionalInvoice } from '@/components/billing/ProfessionalInvoice';
+import { billingService } from '@/services/billing.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
 import { useReactToPrint } from 'react-to-print';
 
-export default function PrintLabReportPage() {
+export default function BillPrintPage() {
   const params = useParams();
   const router = useRouter();
   const { tenant } = useAuthStore();
-  const [entry, setEntry] = useState<any>(null);
+  const [bill, setBill] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const componentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (params.id && tenant?.id) {
-      fetchEntry();
+      fetchBill();
     }
   }, [params.id, tenant]);
 
-  const fetchEntry = async () => {
+  const fetchBill = async () => {
     try {
       setLoading(true);
-      const response = await labEntryService.getPrintData(
-        params.id as string,
-        tenant?.id || ''
-      );
-      setEntry(response.data);
+      const response = await billingService.getById(params.id as string, tenant?.id || '');
+      setBill(response.data);
     } catch (error) {
-      console.error('Failed to fetch entry:', error);
-      alert('Failed to load report data');
+      console.error('Failed to fetch bill:', error);
+      alert('Failed to load invoice');
     } finally {
       setLoading(false);
     }
@@ -42,11 +39,11 @@ export default function PrintLabReportPage() {
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
-    documentTitle: `Lab_Report_${entry?.entryNumber || 'Report'}`,
+    documentTitle: `Invoice_${bill?.billNumber || 'Bill'}`,
     pageStyle: `
       @page {
         size: A4;
-        margin: 20mm;
+        margin: 15mm;
       }
       @media print {
         body {
@@ -58,23 +55,21 @@ export default function PrintLabReportPage() {
   });
 
   const handleDownloadPDF = () => {
-    // For now, just trigger print - user can save as PDF
-    // In production, you might want to use a library like jsPDF or html2pdf
     handlePrint();
   };
 
   if (loading) {
     return (
       <div className="p-6">
-        <div className="text-center py-8">Loading report...</div>
+        <div className="text-center py-8">Loading invoice...</div>
       </div>
     );
   }
 
-  if (!entry) {
+  if (!bill) {
     return (
       <div className="p-6">
-        <div className="text-center py-8">Report not found</div>
+        <div className="text-center py-8">Invoice not found</div>
       </div>
     );
   }
@@ -83,11 +78,11 @@ export default function PrintLabReportPage() {
     <div className="min-h-screen bg-gray-100">
       {/* Action Bar - Hidden on print */}
       <div className="bg-white border-b px-6 py-4 print:hidden">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link href={`/dashboard/lab-entries/${entry.id}`}>
+        <div className="max-w-5xl mx-auto flex justify-between items-center">
+          <Link href={`/dashboard/billing/${bill.id}`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Order
+              Back to Invoice
             </Button>
           </Link>
           <div className="flex gap-2">
@@ -97,24 +92,24 @@ export default function PrintLabReportPage() {
             </Button>
             <Button onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
-              Print Report
+              Print Invoice
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Report Preview */}
+      {/* Invoice Preview */}
       <div className="py-8">
-        <ProfessionalLabReport
+        <ProfessionalInvoice
           ref={componentRef}
-          entry={entry}
+          bill={bill}
           hospital={{
             name: tenant?.name || 'Hospital Management System',
             address: '123 Medical Street, Healthcare City, State - 123456',
             phone: '+91 1234567890',
-            email: 'lab@hospital.com',
+            email: 'billing@hospital.com',
             registrationNo: 'REG/2024/12345',
-            labLicense: 'LAB/LIC/2024/001',
+            taxId: '29ABCDE1234F1Z5',
           }}
         />
       </div>

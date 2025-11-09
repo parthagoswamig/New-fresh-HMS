@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   FileText, Search, Eye, CheckCircle, XCircle, 
-  Clock, AlertCircle, Plus 
+  Clock, AlertCircle, Plus, ArrowLeft 
 } from 'lucide-react';
 import { insuranceService } from '@/services/insurance.service';
 import { useAuthStore } from '@/store/auth-store';
@@ -108,12 +108,20 @@ export default function ClaimsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <FileText className="w-8 h-8" />
-            Insurance Claims
-          </h1>
-          <p className="text-gray-500">Manage and process insurance claims</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/insurance">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <FileText className="w-8 h-8" />
+              Insurance Claims
+            </h1>
+            <p className="text-gray-500">Manage and process insurance claims</p>
+          </div>
         </div>
         <Link href="/dashboard/insurance/claims/new">
           <Button>

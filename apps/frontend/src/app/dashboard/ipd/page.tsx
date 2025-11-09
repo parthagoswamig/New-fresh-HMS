@@ -342,15 +342,27 @@ export default function IPDPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
-                            {admission.status !== 'DISCHARGED' && (
+                            {admission.status !== 'DISCHARGED' ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDischargeClick(admission)}
                                 className="text-green-600 hover:text-green-700"
+                                title="Discharge Patient"
                               >
                                 <FileText className="w-4 h-4" />
                               </Button>
+                            ) : (
+                              <Link href={`/dashboard/ipd/${admission.id}/discharge-print`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="View Discharge Summary"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                              </Link>
                             )}
                             <Button
                               variant="ghost"

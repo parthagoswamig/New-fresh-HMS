@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Building2, Plus, Search, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { insuranceService } from '@/services/insurance.service';
 import { useAuthStore } from '@/store/auth-store';
+import Link from 'next/link';
 
 export default function CompaniesPage() {
   const { tenant } = useAuthStore();
@@ -121,12 +122,20 @@ export default function CompaniesPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Building2 className="w-8 h-8" />
-            Insurance Companies
-          </h1>
-          <p className="text-gray-500">Manage insurance providers and their details</p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/insurance">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Building2 className="w-8 h-8" />
+              Insurance Companies
+            </h1>
+            <p className="text-gray-500">Manage insurance providers and their details</p>
+          </div>
         </div>
         <Button
           onClick={() => {

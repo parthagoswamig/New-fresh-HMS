@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Trash2, User, Receipt, Calendar, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, User, Receipt, Calendar, DollarSign, FileText, Printer } from 'lucide-react';
 import { billingService } from '@/services/billing.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
@@ -128,6 +128,12 @@ export default function InvoiceDetailPage() {
       </div>
 
       <div className="flex gap-3 mb-6">
+        <Link href={`/dashboard/billing/${bill.id}/print`}>
+          <Button>
+            <Printer className="w-4 h-4 mr-2" />
+            Print Invoice
+          </Button>
+        </Link>
         <Link href={`/dashboard/billing/${bill.id}/edit`}>
           <Button variant="outline">
             <Edit className="w-4 h-4 mr-2" />
