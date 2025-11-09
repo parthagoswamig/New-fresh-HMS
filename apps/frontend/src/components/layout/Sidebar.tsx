@@ -25,6 +25,7 @@ import {
   Scissors,
   Scan,
   DollarSign,
+  Package,
 } from 'lucide-react';
 
 const menuItems = [
@@ -39,6 +40,7 @@ const menuItems = [
   { icon: Scissors, label: 'Surgery', href: '/dashboard/surgery' },
   { icon: Pill, label: 'Pharmacy', href: '/dashboard/pharmacy' },
   { icon: FlaskConical, label: 'Laboratory', href: '/dashboard/lab-entries' },
+  { icon: Package, label: 'Inventory', href: '/dashboard/inventory' },
   { icon: Scan, label: 'Radiology', href: '/dashboard/radiology' },
   { icon: Receipt, label: 'Billing', href: '/dashboard/billing' },
   { icon: Shield, label: 'Insurance', href: '/dashboard/insurance' },

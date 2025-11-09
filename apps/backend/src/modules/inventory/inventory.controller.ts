@@ -479,4 +479,68 @@ export class InventoryController {
       body.reason,
     );
   }
+
+  // ==================== FINANCE MODULE INTEGRATION ====================
+  
+  @Get('integrations/finance/purchase-expenses')
+  @ApiOperation({ summary: 'Get purchase expenses for Finance module' })
+  async getPurchaseExpenses(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID is required');
+    }
+    return this.inventoryService.getPurchaseExpenses(
+      tenantId,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  @Get('integrations/finance/consumption-expenses')
+  @ApiOperation({ summary: 'Get inventory consumption expenses' })
+  async getConsumptionExpenses(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID is required');
+    }
+    return this.inventoryService.getConsumptionExpenses(
+      tenantId,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  @Get('integrations/finance/supplier-payments')
+  @ApiOperation({ summary: 'Get supplier payment summary' })
+  async getSupplierPaymentSummary(
+    @Headers('x-tenant-id') tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID is required');
+    }
+    return this.inventoryService.getSupplierPaymentSummary(tenantId);
+  }
+
+  @Get('integrations/finance/monthly-summary')
+  @ApiOperation({ summary: 'Get monthly inventory expense summary' })
+  async getMonthlyExpenseSummary(
+    @Headers('x-tenant-id') tenantId: string,
+    @Query('year') year: string,
+    @Query('month') month: string,
+  ) {
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID is required');
+    }
+    return this.inventoryService.getMonthlyExpenseSummary(
+      tenantId,
+      parseInt(year),
+      parseInt(month),
+    );
+  }
 }

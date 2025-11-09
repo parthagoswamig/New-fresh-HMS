@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import inventoryService from '@/services/inventory.service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, AlertTriangle, TrendingDown, Package, ArrowLeft } from 'lucide-react';
+import { FileText, AlertTriangle, TrendingDown, Package, ArrowLeft, Printer } from 'lucide-react';
 import Link from 'next/link';
 
 export default function InventoryReportsPage() {
@@ -56,12 +56,22 @@ export default function InventoryReportsPage() {
         Back to Inventory
       </Link>
 
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <FileText className="h-8 w-8 text-blue-600" />
-          Inventory Reports
-        </h1>
-        <p className="text-gray-600 mt-1">Comprehensive inventory analytics and reports</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FileText className="h-8 w-8 text-blue-600" />
+            Inventory Reports
+          </h1>
+          <p className="text-gray-600 mt-1">Comprehensive inventory analytics and reports</p>
+        </div>
+        <Link
+          href="/dashboard/inventory/reports/print"
+          target="_blank"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <Printer className="h-5 w-5" />
+          Print Report
+        </Link>
       </div>
 
       {/* Summary Cards */}

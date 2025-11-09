@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
@@ -1095,6 +1095,205 @@ export class InventoryService {
       success: true,
       reason,
       items: results,
+    };
+  }
+
+  // ==================== FINANCE MODULE INTEGRATION ====================
+  
+  /**
+   * Get purchase expenses for Finance module
+   * Returns all purchase orders with costs for expense tracking
+   */
+  async getPurchaseExpenses(
+    tenantId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
+    const purchaseOrders = await this.prisma.purchaseOrder.findMany({
+      where: {
+        tenantId,
+        status: 'RECEIVED',
+        ...(startDate && endDate && {
+          orderDate: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+      },
+      include: {
+        supplier: true,
+        items: {
+          include: {
+            item: true,
+          },
+        },
+      },
+      orderBy: { orderDate: 'desc' },
+    });
+
+    return purchaseOrders.map((po) => {
+      const totalAmount = po.items.reduce((sum, item) => sum + item.totalPrice, 0);
+      const taxAmount = po.items.reduce((sum, item) => sum + (item.totalPrice * (item.tax / 100)), 0);
+      
+      return {
+        id: po.id,
+        poNumber: po.poNumber,
+        orderDate: po.orderDate,
+        supplierName: po.supplier.name,
+        supplierId: po.supplierId,
+        totalAmount: totalAmount,
+        taxAmount: taxAmount,
+        grandTotal: totalAmount + taxAmount,
+        items: po.items.map((item) => ({
+          itemName: item.item.itemName,
+          itemCode: item.item.itemCode,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+        })),
+        category: 'INVENTORY_PURCHASE',
+        expenseType: 'OPERATIONAL',
+      };
+    });
+  }
+
+  /**
+   * Get inventory consumption expenses
+   * Track stock issued/consumed for expense analysis
+   */
+  async getConsumptionExpenses(
+    tenantId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
+    const adjustments = await this.prisma.stockAdjustment.findMany({
+      where: {
+        tenantId,
+        reason: { in: ['DAMAGE', 'LOSS', 'THEFT', 'EXPIRED', 'SAMPLE'] },
+        ...(startDate && endDate && {
+          adjustedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }),
+      },
+      include: {
+        item: true,
+      },
+      orderBy: { adjustedAt: 'desc' },
+    });
+
+    // Get batch info separately if needed
+    const adjustmentsWithBatch = await Promise.all(
+      adjustments.map(async (adj) => {
+        let costPrice = 0;
+        if (adj.batchNumber) {
+          const batch = await this.prisma.stockBatch.findFirst({
+            where: {
+              tenantId,
+              itemId: adj.itemId,
+              batchNumber: adj.batchNumber,
+            },
+          });
+          costPrice = batch?.costPrice || 0;
+        }
+        return { ...adj, costPrice };
+      })
+    );
+
+    return adjustmentsWithBatch.map((adj) => ({
+      id: adj.id,
+      date: adj.adjustedAt,
+      itemName: adj.item.itemName,
+      itemCode: adj.item.itemCode,
+      quantity: Math.abs(adj.adjustmentQuantity),
+      costPrice: adj.costPrice,
+      totalCost: Math.abs(adj.adjustmentQuantity) * adj.costPrice,
+      reason: adj.reason,
+      notes: adj.reasonNotes,
+      category: 'INVENTORY_LOSS',
+      expenseType: 'NON_RECOVERABLE',
+    }));
+  }
+
+  /**
+   * Get supplier payment summary for Finance
+   * Track outstanding payments to suppliers
+   */
+  async getSupplierPaymentSummary(tenantId: string) {
+    const suppliers = await this.prisma.supplier.findMany({
+      where: { tenantId, isActive: true },
+      include: {
+        purchaseOrders: {
+          where: { status: { in: ['APPROVED', 'ORDERED', 'RECEIVED'] } },
+        },
+      },
+    });
+
+    return suppliers.map((supplier) => {
+      const totalOrders = supplier.purchaseOrders.length;
+      const totalAmount = supplier.purchaseOrders.reduce(
+        (sum, po) => sum + po.grandTotal,
+        0,
+      );
+
+      return {
+        supplierId: supplier.id,
+        supplierName: supplier.name,
+        contactPerson: supplier.contactPerson,
+        phone: supplier.phone,
+        email: supplier.email,
+        totalOrders,
+        totalAmount,
+        paymentTerms: supplier.paymentTerms,
+        gstNumber: supplier.gstNumber,
+        category: 'SUPPLIER_PAYABLE',
+      };
+    });
+  }
+
+  /**
+   * Get monthly inventory expense summary
+   * Aggregate expenses by month for Finance dashboard
+   */
+  async getMonthlyExpenseSummary(
+    tenantId: string,
+    year: number,
+    month: number,
+  ) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const [purchases, consumptions] = await Promise.all([
+      this.getPurchaseExpenses(tenantId, startDate, endDate),
+      this.getConsumptionExpenses(tenantId, startDate, endDate),
+    ]);
+
+    const totalPurchases = purchases.reduce((sum, p) => sum + p.grandTotal, 0);
+    const totalConsumptions = consumptions.reduce((sum, c) => sum + c.totalCost, 0);
+
+    return {
+      year,
+      month,
+      period: `${year}-${String(month).padStart(2, '0')}`,
+      purchaseExpenses: {
+        count: purchases.length,
+        amount: totalPurchases,
+        items: purchases,
+      },
+      consumptionExpenses: {
+        count: consumptions.length,
+        amount: totalConsumptions,
+        items: consumptions,
+      },
+      totalExpenses: totalPurchases + totalConsumptions,
+      breakdown: {
+        purchases: totalPurchases,
+        losses: consumptions.filter((c) => c.reason === 'LOSS').reduce((s, c) => s + c.totalCost, 0),
+        damages: consumptions.filter((c) => c.reason === 'DAMAGE').reduce((s, c) => s + c.totalCost, 0),
+        expired: consumptions.filter((c) => c.reason === 'EXPIRED').reduce((s, c) => s + c.totalCost, 0),
+        theft: consumptions.filter((c) => c.reason === 'THEFT').reduce((s, c) => s + c.totalCost, 0),
+      },
     };
   }
 }

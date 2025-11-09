@@ -342,6 +342,42 @@ const inventoryService = {
     apiClient.post('/inventory/integrations/reverse-deduction', { items, reason }, { 
       headers: { 'x-tenant-id': tenantId }
     }),
+
+  // Finance Module Integration
+  getPurchaseExpenses: (
+    tenantId: string,
+    startDate?: string,
+    endDate?: string
+  ) =>
+    apiClient.get('/inventory/integrations/finance/purchase-expenses', { 
+      headers: { 'x-tenant-id': tenantId },
+      params: { startDate, endDate }
+    }),
+
+  getConsumptionExpenses: (
+    tenantId: string,
+    startDate?: string,
+    endDate?: string
+  ) =>
+    apiClient.get('/inventory/integrations/finance/consumption-expenses', { 
+      headers: { 'x-tenant-id': tenantId },
+      params: { startDate, endDate }
+    }),
+
+  getSupplierPaymentSummary: (tenantId: string) =>
+    apiClient.get('/inventory/integrations/finance/supplier-payments', { 
+      headers: { 'x-tenant-id': tenantId }
+    }),
+
+  getMonthlyExpenseSummary: (
+    tenantId: string,
+    year: number,
+    month: number
+  ) =>
+    apiClient.get('/inventory/integrations/finance/monthly-summary', { 
+      headers: { 'x-tenant-id': tenantId },
+      params: { year, month }
+    }),
 };
 
 export default inventoryService;
