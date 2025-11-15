@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Users, Plus, Search, Eye, Edit, Trash2, UserCheck, UserX, User } from 'lucide-react';
+import { Users, Plus, Search, Eye, Edit, Trash2, UserCheck, UserX, User, Receipt } from 'lucide-react';
 import { patientService } from '@/services/patients.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
@@ -236,16 +236,21 @@ export default function PatientsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end gap-2">
                             <Link href={`/dashboard/patients/${patient.id}`}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" title="View Details">
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </Link>
                             <Link href={`/dashboard/patients/${patient.id}/edit`}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" title="Edit Patient">
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(patient.id)}>
+                            <Link href={`/dashboard/billing/new?patientId=${patient.id}`}>
+                              <Button variant="ghost" size="sm" title="Create Bill">
+                                <Receipt className="w-4 h-4 text-green-600" />
+                              </Button>
+                            </Link>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(patient.id)} title="Delete Patient">
                               <Trash2 className="w-4 h-4 text-red-600" />
                             </Button>
                           </div>
@@ -305,6 +310,12 @@ export default function PatientsPage() {
                           <Button variant="outline" size="sm" className="w-full">
                             <Edit className="w-4 h-4 mr-1" />
                             Edit
+                          </Button>
+                        </Link>
+                        <Link href={`/dashboard/billing/new?patientId=${patient.id}`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full">
+                            <Receipt className="w-4 h-4 mr-1 text-green-600" />
+                            Bill
                           </Button>
                         </Link>
                       </div>

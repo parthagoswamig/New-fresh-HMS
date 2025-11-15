@@ -40,11 +40,29 @@ export default function NewOPDVisitPage() {
 
   const fetchPatients = async () => {
     try {
-      const response = await apiClient.get('/patients', {
+      // Fetch all patients
+      const patientsResponse = await apiClient.get('/patients', {
         headers: { 'x-tenant-id': tenant?.id },
         params: { limit: 100 },
       });
-      setPatients(response.data.data || []);
+      
+      // Fetch admitted IPD patients
+      const ipdResponse = await apiClient.get('/ipd', {
+        headers: { 'x-tenant-id': tenant?.id },
+        params: { status: 'ADMITTED', limit: 1000 },
+      });
+      
+      // Get IDs of admitted patients
+      const admittedPatientIds = new Set(
+        (ipdResponse.data.data || []).map((ipd: any) => ipd.patientId)
+      );
+      
+      // Filter out admitted patients from OPD dropdown
+      const availablePatients = (patientsResponse.data.data || []).filter(
+        (patient: any) => !admittedPatientIds.has(patient.id)
+      );
+      
+      setPatients(availablePatients);
     } catch (error) {
       console.error('Failed to fetch patients:', error);
     }

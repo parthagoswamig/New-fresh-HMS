@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Calendar,
   TrendingDown,
+  ShoppingCart,
 } from 'lucide-react';
 import { pharmacyService } from '@/services/pharmacy.service';
 import { useAuthStore } from '@/store/auth-store';
@@ -112,12 +113,20 @@ export default function PharmacyPage() {
               </p>
             </div>
           </div>
-          <Link href="/dashboard/pharmacy/new">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Medicine
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/dashboard/pharmacy/sell">
+              <Button variant="outline" className="flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Sell Medicine
+              </Button>
+            </Link>
+            <Link href="/dashboard/pharmacy/new">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Medicine
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

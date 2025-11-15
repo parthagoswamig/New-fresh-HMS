@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,13 +15,16 @@ import Link from 'next/link';
 
 export default function NewInvoicePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { tenant } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    patientId: '',
+    patientId: searchParams.get('patientId') || '',
     dueDate: '',
     discountAmount: 0,
+    paidAmount: 0,
+    paymentMethod: 'CASH',
     notes: '',
     status: 'PENDING',
   });
@@ -164,6 +167,52 @@ export default function NewInvoicePage() {
                   <option value="CANCELLED">Cancelled</option>
                 </select>
               </div>
+
+              <div>
+                <Label htmlFor="discountAmount">Discount Amount</Label>
+                <Input
+                  type="number"
+                  id="discountAmount"
+                  name="discountAmount"
+                  value={formData.discountAmount}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paidAmount">Paid Amount</Label>
+                <Input
+                  type="number"
+                  id="paidAmount"
+                  name="paidAmount"
+                  value={formData.paidAmount}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <select
+                  id="paymentMethod"
+                  name="paymentMethod"
+                  value={formData.paymentMethod}
+                  onChange={handleChange}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="CASH">Cash</option>
+                  <option value="CARD">Card</option>
+                  <option value="UPI">UPI</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="INSURANCE">Insurance</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -258,6 +307,14 @@ export default function NewInvoicePage() {
               <div className="flex justify-between text-lg font-bold pt-2 border-t">
                 <span>Total:</span>
                 <span className="text-emerald-600">${calculateTotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-blue-600">
+                <span>Paid Amount:</span>
+                <span className="font-medium">${formData.paidAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold text-red-600 pt-2 border-t">
+                <span>Balance Due:</span>
+                <span>${(calculateTotal() - formData.paidAmount).toFixed(2)}</span>
               </div>
             </div>
           </CardContent>

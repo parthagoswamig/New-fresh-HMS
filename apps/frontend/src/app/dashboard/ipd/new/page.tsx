@@ -20,10 +20,14 @@ export default function NewIPDAdmissionPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
+  const [beds, setBeds] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     patientId: '',
     doctorId: '',
     departmentId: '',
+    wardId: '',
+    bedId: '',
     admissionDate: new Date().toISOString().slice(0, 16),
     dischargeDate: '',
     admissionReason: '',
@@ -39,7 +43,17 @@ export default function NewIPDAdmissionPage() {
     fetchPatients();
     fetchDoctors();
     fetchDepartments();
+    fetchWards();
   }, []);
+
+  useEffect(() => {
+    if (formData.wardId) {
+      fetchBeds(formData.wardId);
+    } else {
+      setBeds([]);
+      setFormData(prev => ({ ...prev, bedId: '' }));
+    }
+  }, [formData.wardId]);
 
   const fetchPatients = async () => {
     try {
@@ -77,6 +91,29 @@ export default function NewIPDAdmissionPage() {
       setDepartments(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
+    }
+  };
+
+  const fetchWards = async () => {
+    try {
+      const response = await apiClient.get('/ipd/wards', {
+        headers: { 'x-tenant-id': tenant?.id },
+      });
+      setWards(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch wards:', error);
+    }
+  };
+
+  const fetchBeds = async (wardId: string) => {
+    try {
+      const response = await apiClient.get(`/ipd/wards/${wardId}/beds`, {
+        headers: { 'x-tenant-id': tenant?.id },
+        params: { available: true },
+      });
+      setBeds(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch beds:', error);
     }
   };
 
@@ -223,6 +260,43 @@ export default function NewIPDAdmissionPage() {
               </div>
 
               <div>
+                <Label htmlFor="wardId">Ward</Label>
+                <select
+                  id="wardId"
+                  name="wardId"
+                  value={formData.wardId}
+                  onChange={handleChange}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Ward</option>
+                  {wards.map((ward) => (
+                    <option key={ward.id} value={ward.id}>
+                      {ward.name} {ward.floor ? `(Floor ${ward.floor})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="bedId">Bed</Label>
+                <select
+                  id="bedId"
+                  name="bedId"
+                  value={formData.bedId}
+                  onChange={handleChange}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={!formData.wardId}
+                >
+                  <option value="">Select Bed</option>
+                  {beds.map((bed) => (
+                    <option key={bed.id} value={bed.id}>
+                      Bed {bed.bedNumber} ({bed.bedType})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <Label htmlFor="roomNumber">Room Number</Label>
                 <Input
                   type="text"
@@ -235,7 +309,7 @@ export default function NewIPDAdmissionPage() {
               </div>
 
               <div>
-                <Label htmlFor="bedNumber">Bed Number</Label>
+                <Label htmlFor="bedNumber">Bed Number (Manual)</Label>
                 <Input
                   type="text"
                   id="bedNumber"

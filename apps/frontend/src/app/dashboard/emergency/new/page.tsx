@@ -308,10 +308,10 @@ export default function NewEmergencyPage() {
                 >
                   <option value="">Select nurse...</option>
                   {staff
-                    .filter((s) => s.user.role === 'NURSE')
+                    .filter((s) => s?.user?.role === 'NURSE')
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.user.name}
+                        {s.user?.name || 'Unknown'}
                       </option>
                     ))}
                 </select>
@@ -325,10 +325,10 @@ export default function NewEmergencyPage() {
                 >
                   <option value="">Select doctor...</option>
                   {staff
-                    .filter((s) => s.user.role === 'DOCTOR' || s.user.role === 'HOSPITAL_ADMIN')
+                    .filter((s) => s?.user?.role === 'DOCTOR' || s?.user?.role === 'HOSPITAL_ADMIN')
                     .map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.user.name}
+                        {s.user?.name || 'Unknown'}
                       </option>
                     ))}
                 </select>
