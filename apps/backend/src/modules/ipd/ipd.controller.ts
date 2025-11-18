@@ -77,6 +77,31 @@ export class IpdController {
     return this.ipdService.getStats(tenantId);
   }
 
+  @Get('wards')
+  @ApiOperation({ summary: 'Get list of wards' })
+  @ApiResponse({ status: 200, description: 'List of wards' })
+  getWards(@Headers('x-tenant-id') tenantId: string) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+    return this.ipdService.getWards(tenantId);
+  }
+
+  @Get('wards/:wardId/beds')
+  @ApiOperation({ summary: 'Get beds for ward' })
+  @ApiResponse({ status: 200, description: 'List of beds for ward' })
+  getBeds(
+    @Headers('x-tenant-id') tenantId: string,
+    @Param('wardId') wardId: string,
+    @Query('available') available?: string,
+  ) {
+    if (!tenantId) {
+      throw new Error('Tenant ID is required');
+    }
+    const availableOnly = available === 'true';
+    return this.ipdService.getBedsForWard(tenantId, wardId, availableOnly);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get single IPD admission' })
   @ApiResponse({ status: 200, description: 'IPD admission details' })

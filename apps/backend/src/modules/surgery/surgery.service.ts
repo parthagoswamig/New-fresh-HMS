@@ -133,6 +133,9 @@ export class SurgeryService {
         { procedureName: { contains: search, mode: 'insensitive' } },
         { patient: { firstName: { contains: search, mode: 'insensitive' } } },
         { patient: { lastName: { contains: search, mode: 'insensitive' } } },
+        { patient: { patientId: { contains: search, mode: 'insensitive' } } },
+        { patient: { phone: { contains: search, mode: 'insensitive' } } },
+        { patient: { aadhaarNumber: { contains: search, mode: 'insensitive' } } },
       ];
     }
 

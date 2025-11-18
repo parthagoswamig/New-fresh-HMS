@@ -9,7 +9,7 @@ export class IpdService {
   constructor(private prisma: PrismaService) {}
 
   async create(tenantId: string, dto: CreateIpdDto) {
-    return this.prisma.iPDAdmission.create({
+    const admission = await this.prisma.iPDAdmission.create({
       data: {
         tenantId,
         patientId: dto.patientId,
@@ -60,6 +60,15 @@ export class IpdService {
         },
       },
     });
+
+    if (dto.bedId) {
+      await this.prisma.bed.update({
+        where: { id: dto.bedId },
+        data: { isOccupied: true },
+      });
+    }
+
+    return admission;
   }
 
   async findAll(
@@ -83,6 +92,8 @@ export class IpdService {
         { patient: { firstName: { contains: search, mode: 'insensitive' } } },
         { patient: { lastName: { contains: search, mode: 'insensitive' } } },
         { patient: { patientId: { contains: search, mode: 'insensitive' } } },
+        { patient: { phone: { contains: search, mode: 'insensitive' } } },
+        { patient: { aadhaarNumber: { contains: search, mode: 'insensitive' } } },
         { admissionReason: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -227,7 +238,8 @@ export class IpdService {
   }
 
   async update(tenantId: string, id: string, dto: UpdateIpdDto) {
-    await this.findOne(tenantId, id);
+    const existing = await this.findOne(tenantId, id);
+    const previousBedId = existing.bed?.id;
 
     const updateData: any = {};
 
@@ -246,7 +258,7 @@ export class IpdService {
     if (dto.dischargeSummary !== undefined) updateData.dischargeSummary = dto.dischargeSummary;
     if (dto.status) updateData.status = dto.status;
 
-    return this.prisma.iPDAdmission.update({
+    const updated = await this.prisma.iPDAdmission.update({
       where: { id },
       data: updateData,
       include: {
@@ -281,14 +293,36 @@ export class IpdService {
         },
       },
     });
+
+    if (dto.bedId && dto.bedId !== previousBedId) {
+      await this.prisma.bed.update({
+        where: { id: dto.bedId },
+        data: { isOccupied: true },
+      });
+      if (previousBedId) {
+        await this.prisma.bed.update({
+          where: { id: previousBedId },
+          data: { isOccupied: false },
+        });
+      }
+    }
+
+    return updated;
   }
 
   async remove(tenantId: string, id: string) {
-    await this.findOne(tenantId, id);
+    const existing = await this.findOne(tenantId, id);
 
     await this.prisma.iPDAdmission.delete({
       where: { id },
     });
+
+    if (existing.bed?.id) {
+      await this.prisma.bed.update({
+        where: { id: existing.bed.id },
+        data: { isOccupied: false },
+      });
+    }
 
     return { message: 'IPD admission deleted successfully' };
   }
@@ -324,7 +358,7 @@ export class IpdService {
     }
 
     // Update admission with discharge information
-    return this.prisma.iPDAdmission.update({
+    const updated = await this.prisma.iPDAdmission.update({
       where: { id },
       data: {
         status: 'DISCHARGED',
@@ -366,6 +400,33 @@ export class IpdService {
           },
         },
       },
+    });
+
+    if (admission.bed?.id) {
+      await this.prisma.bed.update({
+        where: { id: admission.bed.id },
+        data: { isOccupied: false },
+      });
+    }
+
+    return updated;
+  }
+
+  async getWards(tenantId: string) {
+    return this.prisma.ward.findMany({
+      where: { tenantId },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async getBedsForWard(tenantId: string, wardId: string, availableOnly?: boolean) {
+    const where: any = { tenantId, wardId };
+    if (availableOnly) {
+      where.isOccupied = false;
+    }
+    return this.prisma.bed.findMany({
+      where,
+      orderBy: { bedNumber: 'asc' },
     });
   }
 }
