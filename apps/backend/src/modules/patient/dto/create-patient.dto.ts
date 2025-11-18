@@ -32,6 +32,11 @@ export class CreatePatientDto {
   @IsOptional()
   address?: string;
 
+  @ApiPropertyOptional({ description: 'Aadhaar number (India national ID)' })
+  @IsString()
+  @IsOptional()
+  aadhaarNumber?: string;
+
   @ApiPropertyOptional({ description: 'City' })
   @IsString()
   @IsOptional()
@@ -66,4 +71,8 @@ export class CreatePatientDto {
   @IsString()
   @IsOptional()
   allergies?: string;
+
+  @ApiPropertyOptional({ description: 'Supporting documents JSON payload (e.g., uploaded files metadata)' })
+  @IsOptional()
+  supportingDocuments?: any;
 }

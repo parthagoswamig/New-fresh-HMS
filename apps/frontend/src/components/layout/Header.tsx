@@ -40,13 +40,13 @@ export function Header() {
               </p>
               <p className="text-xs text-gray-500">{user?.role}</p>
             </div>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-pink-600 flex items-center justify-center text-white font-medium text-sm">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </div>
           </div>
 
-          {/* Logout */}
-          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout" className="hidden sm:flex">
+          {/* Logout (visible on mobile and desktop) */}
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
             <LogOut className="w-5 h-5" />
           </Button>
         </div>

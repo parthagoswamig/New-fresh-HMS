@@ -22,6 +22,20 @@ export class PatientService {
       }
     }
 
+    // Check for duplicate Aadhaar within tenant (if provided)
+    if (dto.aadhaarNumber) {
+      const existingAadhaar = await this.prisma.patient.findFirst({
+        where: {
+          tenantId,
+          aadhaarNumber: dto.aadhaarNumber,
+        },
+      });
+
+      if (existingAadhaar) {
+        throw new ConflictException('Patient with this Aadhaar number already exists');
+      }
+    }
+
     // Generate patient ID
     const count = await this.prisma.patient.count({ where: { tenantId } });
     const patientId = `PAT${String(count + 1).padStart(5, '0')}`;
@@ -35,6 +49,7 @@ export class PatientService {
         dateOfBirth: new Date(dto.dateOfBirth),
         gender: dto.gender as any,
         phone: dto.phone,
+        aadhaarNumber: dto.aadhaarNumber,
         email: dto.email,
         address: dto.address,
         city: dto.city,
@@ -44,6 +59,7 @@ export class PatientService {
         maritalStatus: dto.maritalStatus,
         emergencyContact: dto.emergencyContact,
         allergies: dto.allergies,
+        supportingDocuments: (dto as any).supportingDocuments ?? undefined,
       },
     });
   }
@@ -68,6 +84,7 @@ export class PatientService {
         { patientId: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
+        { aadhaarNumber: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -164,6 +181,7 @@ export class PatientService {
     if (dto.dateOfBirth) updateData.dateOfBirth = new Date(dto.dateOfBirth);
     if (dto.gender) updateData.gender = dto.gender;
     if (dto.phone) updateData.phone = dto.phone;
+    if (dto.aadhaarNumber !== undefined) updateData.aadhaarNumber = dto.aadhaarNumber;
     if (dto.email !== undefined) updateData.email = dto.email;
     if (dto.address !== undefined) updateData.address = dto.address;
     if (dto.city !== undefined) updateData.city = dto.city;
@@ -173,6 +191,9 @@ export class PatientService {
     if (dto.maritalStatus !== undefined) updateData.maritalStatus = dto.maritalStatus;
     if (dto.emergencyContact !== undefined) updateData.emergencyContact = dto.emergencyContact;
     if (dto.allergies !== undefined) updateData.allergies = dto.allergies;
+    if ((dto as any).supportingDocuments !== undefined) {
+      updateData.supportingDocuments = (dto as any).supportingDocuments;
+    }
 
     return this.prisma.patient.update({
       where: { id },

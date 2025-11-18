@@ -21,6 +21,7 @@ export default function NewLabEntryPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [selectedTests, setSelectedTests] = useState<any[]>([]);
+  const [patientSearch, setPatientSearch] = useState('');
   const [formData, setFormData] = useState({
     patientId: '',
     sampleType: 'Blood',
@@ -35,9 +36,9 @@ export default function NewLabEntryPage() {
     }
   }, [tenant]);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (searchTerm?: string) => {
     try {
-      const response = await patientService.list({ limit: 100 }, tenant?.id || '');
+      const response = await patientService.list({ limit: 100, search: searchTerm || undefined }, tenant?.id || '');
       // Handle both array and object response formats
       const patientData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       setPatients(patientData);
@@ -138,22 +139,46 @@ export default function NewLabEntryPage() {
             <CardTitle>Patient Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="patient">Patient *</Label>
-              <select
-                id="patient"
-                className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.patientId}
-                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
-                required
-              >
-                <option value="">Select Patient</option>
-                {patients.map((patient) => (
-                  <option key={patient.id} value={patient.id}>
-                    {patient.firstName} {patient.lastName} ({patient.patientId})
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-2">
+              <div>
+                <Label className="text-sm" htmlFor="patientSearch">
+                  Search Patient by Aadhaar / Name / ID / Phone
+                </Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    id="patientSearch"
+                    type="text"
+                    value={patientSearch}
+                    onChange={(e) => setPatientSearch(e.target.value)}
+                    placeholder="Enter Aadhaar, name, ID, or phone"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fetchPatients(patientSearch)}
+                  >
+                    Search
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="patient">Patient *</Label>
+                <select
+                  id="patient"
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  value={formData.patientId}
+                  onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                  required
+                >
+                  <option value="">Select Patient</option>
+                  {patients.map((patient) => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.firstName} {patient.lastName} ({patient.patientId})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>

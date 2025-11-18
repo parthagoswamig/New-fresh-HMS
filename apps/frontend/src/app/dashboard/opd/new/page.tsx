@@ -20,6 +20,7 @@ export default function NewOPDVisitPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
+  const [patientSearch, setPatientSearch] = useState('');
   const [formData, setFormData] = useState({
     patientId: '',
     doctorId: '',
@@ -33,17 +34,19 @@ export default function NewOPDVisitPage() {
   });
 
   useEffect(() => {
-    fetchPatients();
-    fetchDoctors();
-    fetchDepartments();
-  }, []);
+    if (tenant?.id) {
+      fetchPatients();
+      fetchDoctors();
+      fetchDepartments();
+    }
+  }, [tenant]);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (searchTerm?: string) => {
     try {
       // Fetch all patients
       const patientsResponse = await apiClient.get('/patients', {
         headers: { 'x-tenant-id': tenant?.id },
-        params: { limit: 100 },
+        params: { limit: 100, search: searchTerm || undefined },
       });
       
       // Fetch admitted IPD patients
@@ -74,13 +77,15 @@ export default function NewOPDVisitPage() {
         headers: { 'x-tenant-id': tenant?.id },
         params: { limit: 100 },
       });
-      // Filter only doctors
-      const doctorsList = response.data.data?.filter(
-        (staff: any) => staff.user.role === 'DOCTOR'
-      ) || [];
+      // Filter only doctors with safe access
+      const staffData = Array.isArray(response?.data?.data) ? response.data.data : [];
+      const doctorsList = staffData.filter(
+        (staff: any) => staff?.user?.role === 'DOCTOR'
+      );
       setDoctors(doctorsList);
     } catch (error) {
       console.error('Failed to fetch doctors:', error);
+      setDoctors([]);
     }
   };
 
@@ -143,6 +148,25 @@ export default function NewOPDVisitPage() {
             <CardTitle>Visit Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+              <div className="flex-1">
+                <Label htmlFor="patientSearch">Search Patient by Aadhaar / Name / ID / Phone</Label>
+                <Input
+                  id="patientSearch"
+                  type="text"
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
+                  placeholder="Enter Aadhaar, patient ID, name, or phone"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => fetchPatients(patientSearch)}
+              >
+                Search
+              </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="patientId">Patient *</Label>

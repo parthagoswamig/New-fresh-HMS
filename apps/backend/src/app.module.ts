@@ -10,6 +10,7 @@ import { StaffModule } from './modules/staff/staff.module';
 import { AppointmentModule } from './modules/appointment/appointment.module';
 import { OpdModule } from './modules/opd/opd.module';
 import { IpdModule } from './modules/ipd/ipd.module';
+import { PrescriptionModule } from './modules/prescription/prescription.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { LaboratoryModule } from './modules/laboratory/laboratory.module';
 import { RadiologyModule } from './modules/radiology/radiology.module';
@@ -38,6 +39,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
     AppointmentModule,
     OpdModule,
     IpdModule,
+    PrescriptionModule,
     PharmacyModule,
     LaboratoryModule,
     RadiologyModule,

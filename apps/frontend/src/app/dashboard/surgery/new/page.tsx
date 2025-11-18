@@ -32,6 +32,7 @@ export default function NewSurgeryPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [surgeons, setSurgeons] = useState<any[]>([]);
   const [otRooms, setOtRooms] = useState<any[]>([]);
+  const [patientSearch, setPatientSearch] = useState('');
   
   const [formData, setFormData] = useState({
     patientId: '',
@@ -54,17 +55,28 @@ export default function NewSurgeryPage() {
     }
   }, [tenant]);
 
-  const fetchData = async () => {
+  const fetchData = async (searchTerm?: string) => {
     try {
       const [patientsRes, staffRes, otRoomsRes] = await Promise.all([
-        patientService.list({ page: 1, limit: 100 }, tenant?.id || ''),
+        patientService.list({ page: 1, limit: 100, search: searchTerm || undefined }, tenant?.id || ''),
         staffService.list(tenant?.id || '', 1, 100),
         surgeryService.getOperatingRooms(tenant?.id || ''),
       ]);
-      setPatients(patientsRes.data);
-      setSurgeons(staffRes.data.filter((s: any) => 
-        s.user.role === 'DOCTOR' || s.user.role === 'HOSPITAL_ADMIN'
-      ));
+      const patientData = Array.isArray(patientsRes?.data)
+        ? patientsRes.data
+        : (patientsRes?.data?.data || []);
+
+      const staffData = Array.isArray(staffRes?.data)
+        ? staffRes.data
+        : (staffRes?.data?.data || []);
+
+      setPatients(patientData);
+      setSurgeons(
+        staffData.filter(
+          (s: any) =>
+            s?.user?.role === 'DOCTOR' || s?.user?.role === 'HOSPITAL_ADMIN',
+        ),
+      );
       setOtRooms(otRoomsRes);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -116,23 +128,47 @@ export default function NewSurgeryPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Patient *
-                </label>
-                <select
-                  value={formData.patientId}
-                  onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Patient</option>
-                  {patients.map((patient) => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.patientId} - {patient.firstName} {patient.lastName}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search Patient by Aadhaar / Name / ID / Phone
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      placeholder="Enter Aadhaar, name, ID, or phone"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fetchData(patientSearch)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-sm font-medium"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Patient *
+                  </label>
+                  <select
+                    value={formData.patientId}
+                    onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select Patient</option>
+                    {patients.map((patient) => (
+                      <option key={patient.id} value={patient.id}>
+                        {patient.patientId} - {patient.firstName} {patient.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>

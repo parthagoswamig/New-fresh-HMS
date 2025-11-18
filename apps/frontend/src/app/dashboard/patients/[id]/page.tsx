@@ -18,6 +18,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { patientService } from '@/services/patients.service';
+import { prescriptionService } from '@/services/prescriptions.service';
 import { useAuthStore } from '@/store/auth-store';
 import Link from 'next/link';
 
@@ -27,6 +28,8 @@ export default function PatientDetailPage() {
   const { tenant } = useAuthStore();
   const [patient, setPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [prescriptionsLoading, setPrescriptionsLoading] = useState(false);
 
   useEffect(() => {
     fetchPatient();
@@ -42,6 +45,27 @@ export default function PatientDetailPage() {
       alert('Failed to load patient details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tenant?.id && params.id) {
+      fetchPrescriptions();
+    }
+  }, [tenant?.id, params.id]);
+
+  const fetchPrescriptions = async () => {
+    try {
+      setPrescriptionsLoading(true);
+      const response = await prescriptionService.listByPatient(
+        params.id as string,
+        tenant?.id || '',
+      );
+      setPrescriptions(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch prescriptions:', error);
+    } finally {
+      setPrescriptionsLoading(false);
     }
   };
 
@@ -202,6 +226,75 @@ export default function PatientDetailPage() {
           </CardContent>
         </Card>
 
+        {/* Prescription History */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <FileText className="w-5 h-5 mr-2" />
+                Prescription History
+              </span>
+              {prescriptionsLoading && (
+                <span className="text-xs text-gray-500">Loading...</span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(!prescriptions || prescriptions.length === 0) && !prescriptionsLoading && (
+              <p className="text-sm text-gray-500">No prescriptions found for this patient.</p>
+            )}
+            {prescriptions && prescriptions.length > 0 && (
+              <div className="space-y-3">
+                {prescriptions.map((rx: any) => {
+                  const isAppointment = !!rx.appointment;
+                  const contextLabel = isAppointment
+                    ? `Appointment with Dr. ${rx.appointment?.doctor?.user?.firstName || ''} ${
+                        rx.appointment?.doctor?.user?.lastName || ''
+                      }`
+                    : rx.opdVisit
+                    ? `OPD Visit with Dr. ${rx.opdVisit?.doctor?.user?.firstName || ''} ${
+                        rx.opdVisit?.doctor?.user?.lastName || ''
+                      }`
+                    : rx.ipdAdmission
+                    ? `IPD Admission with Dr. ${rx.ipdAdmission?.doctor?.user?.firstName || ''} ${
+                        rx.ipdAdmission?.doctor?.user?.lastName || ''
+                      }`
+                    : 'Prescription';
+
+                  return (
+                    <div
+                      key={rx.id}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{contextLabel}</p>
+                        <p className="text-sm text-gray-600">
+                          {formatDate(rx.prescriptionDate)}
+                        </p>
+                        {rx.notes && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {rx.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isAppointment && rx.appointment?.id && (
+                          <Link href={`/dashboard/appointments/${rx.appointment.id}/print`}>
+                            <Button variant="outline" size="sm">
+                              <FileText className="w-4 h-4 mr-1" />
+                              Print Prescription
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Contact Information */}
         <Card>
           <CardHeader>
@@ -273,7 +366,10 @@ export default function PatientDetailPage() {
             <CardContent>
               <div className="space-y-3">
                 {patient.appointments.slice(0, 5).map((apt: any) => (
-                  <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={apt.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg"
+                  >
                     <div>
                       <p className="text-sm font-medium text-gray-900">
                         Dr. {apt.doctor.user.firstName} {apt.doctor.user.lastName}
@@ -282,17 +378,25 @@ export default function PatientDetailPage() {
                         {formatDate(apt.appointmentDate)} at {apt.appointmentTime}
                       </p>
                     </div>
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        apt.status === 'COMPLETED'
-                          ? 'bg-green-100 text-green-800'
-                          : apt.status === 'CONFIRMED'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {apt.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          apt.status === 'COMPLETED'
+                            ? 'bg-green-100 text-green-800'
+                            : apt.status === 'CONFIRMED'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {apt.status}
+                      </span>
+                      <Link href={`/dashboard/appointments/${apt.id}/print`}>
+                        <Button variant="outline" size="sm">
+                          <FileText className="w-4 h-4 mr-1" />
+                          Print Prescription
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

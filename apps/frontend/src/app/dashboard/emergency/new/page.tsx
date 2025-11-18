@@ -19,6 +19,7 @@ export default function NewEmergencyPage() {
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
+  const [patientSearch, setPatientSearch] = useState('');
   const [useQuickReg, setUseQuickReg] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -60,14 +61,17 @@ export default function NewEmergencyPage() {
     }
   }, [tenant]);
 
-  const fetchData = async () => {
+  const fetchData = async (searchTerm?: string) => {
     try {
       const [patientsRes, staffRes] = await Promise.all([
-        patientService.list({ page: 1, limit: 100 }, tenant?.id || ''),
+        patientService.list({ page: 1, limit: 100, search: searchTerm || undefined }, tenant?.id || ''),
         staffService.list(tenant?.id || '', 1, 100),
       ]);
-      setPatients(patientsRes.data.data);
-      setStaff(staffRes.data.data);
+      const patientList = Array.isArray(patientsRes?.data?.data) ? patientsRes.data.data : [];
+      const staffList = Array.isArray(staffRes?.data) ? staffRes.data : [];
+
+      setPatients(patientList);
+      setStaff(staffList);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -172,21 +176,45 @@ export default function NewEmergencyPage() {
             </div>
 
             {!useQuickReg ? (
-              <div>
-                <label className="block text-sm font-medium mb-2">Select Patient *</label>
-                <select
-                  value={formData.patientId}
-                  onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
-                  required={!useQuickReg}
-                  className="w-full border rounded-lg px-4 py-2"
-                >
-                  <option value="">Select patient...</option>
-                  {patients.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.patientId} - {p.firstName} {p.lastName}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Search Patient by Aadhaar / Name / ID / Phone
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={patientSearch}
+                      onChange={(e) => setPatientSearch(e.target.value)}
+                      placeholder="Enter Aadhaar, name, ID, or phone"
+                      className="flex-1 border rounded-lg px-4 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fetchData(patientSearch)}
+                      className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 text-sm font-medium"
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Select Patient *</label>
+                  <select
+                    value={formData.patientId}
+                    onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                    required={!useQuickReg}
+                    className="w-full border rounded-lg px-4 py-2"
+                  >
+                    <option value="">Select patient...</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.patientId} - {p.firstName} {p.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">

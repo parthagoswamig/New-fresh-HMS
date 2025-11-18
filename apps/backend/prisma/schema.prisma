@@ -231,6 +231,7 @@ model Patient {
   dateOfBirth       DateTime
   gender            Gender
   phone             String
+  aadhaarNumber     String?
   email             String?
   address           String?
   city              String?
@@ -240,6 +241,7 @@ model Patient {
   bloodGroup        String?
   maritalStatus     String?
   allergies         String?
+  supportingDocuments Json?
   status            PatientStatus @default(ACTIVE)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -262,6 +264,7 @@ model Patient {
 
   @@unique([tenantId, patientId])
   @@index([tenantId])
+  @@index([tenantId, aadhaarNumber])
   @@map("patients")
 }
 
@@ -304,9 +307,10 @@ model Appointment {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  patient         Patient  @relation(fields: [patientId], references: [id])
-  doctor          Staff    @relation(fields: [doctorId], references: [id])
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  doctor          Staff         @relation(fields: [doctorId], references: [id])
+  prescriptions   Prescription[]
 
   @@index([tenantId])
   @@index([patientId])
@@ -416,24 +420,27 @@ model IPDAdmission {
 
 // ==================== PRESCRIPTION ====================
 model Prescription {
-  id              String              @id @default(cuid())
-  tenantId        String
-  opdVisitId      String?
-  ipdAdmissionId  String?
-  doctorId        String
-  prescriptionDate DateTime           @default(now())
-  status          PrescriptionStatus  @default(PENDING)
-  notes           String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id               String              @id @default(cuid())
+  tenantId         String
+  opdVisitId       String?
+  ipdAdmissionId   String?
+  appointmentId    String?
+  doctorId         String
+  prescriptionDate DateTime            @default(now())
+  status           PrescriptionStatus  @default(PENDING)
+  notes            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  opdVisit        OPDVisit?           @relation(fields: [opdVisitId], references: [id])
-  ipdAdmission    IPDAdmission?       @relation(fields: [ipdAdmissionId], references: [id])
-  doctor          Staff               @relation(fields: [doctorId], references: [id])
-  items           PrescriptionItem[]
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  opdVisit         OPDVisit?           @relation(fields: [opdVisitId], references: [id])
+  ipdAdmission     IPDAdmission?       @relation(fields: [ipdAdmissionId], references: [id])
+  appointment      Appointment?        @relation(fields: [appointmentId], references: [id])
+  doctor           Staff               @relation(fields: [doctorId], references: [id])
+  items            PrescriptionItem[]
 
   @@index([tenantId])
+  @@index([appointmentId])
   @@map("prescriptions")
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ export default function NewPatientPage() {
     dateOfBirth: '',
     gender: 'MALE',
     phone: '',
+    aadhaarNumber: '',
     email: '',
     address: '',
     city: '',
@@ -32,6 +33,8 @@ export default function NewPatientPage() {
     emergencyContact: '',
     allergies: '',
   });
+
+  const [supportingDocs, setSupportingDocs] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +52,8 @@ export default function NewPatientPage() {
         maritalStatus: formData.maritalStatus || undefined,
         emergencyContact: formData.emergencyContact || undefined,
         allergies: formData.allergies || undefined,
+        aadhaarNumber: formData.aadhaarNumber || undefined,
+        supportingDocuments: supportingDocs.length ? supportingDocs : undefined,
       };
 
       await patientService.create(payload, tenant?.id || '');
@@ -66,6 +71,28 @@ export default function NewPatientPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const content = reader.result;
+        setSupportingDocs((prev) => [
+          ...prev,
+          {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            content,
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   return (
@@ -139,6 +166,19 @@ export default function NewPatientPage() {
                   <option value="FEMALE">Female</option>
                   <option value="OTHER">Other</option>
                 </select>
+              </div>
+
+              <div>
+                <Label htmlFor="aadhaarNumber">Aadhaar Number</Label>
+                <Input
+                  type="text"
+                  id="aadhaarNumber"
+                  name="aadhaarNumber"
+                  value={formData.aadhaarNumber}
+                  onChange={handleChange}
+                  maxLength={12}
+                  placeholder="12-digit Aadhaar (optional)"
+                />
               </div>
 
               <div>
@@ -286,6 +326,22 @@ export default function NewPatientPage() {
                 rows={3}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Supporting Documents</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input type="file" multiple onChange={handleFileChange} />
+            {supportingDocs.length > 0 && (
+              <ul className="list-disc list-inside text-sm text-gray-600">
+                {supportingDocs.map((doc, idx) => (
+                  <li key={idx}>{doc.name}</li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
 
